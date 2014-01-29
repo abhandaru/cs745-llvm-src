@@ -43,7 +43,6 @@ public:
   // Assignment code
   //
   virtual bool runOnFunction(Function &F) {
-    std::cout << "Name,\tArgs,\tCalls,\tBlocks,\tInsns\n";
 
     // useful information
     iplist<BasicBlock>& blocks = F.getBasicBlockList();
@@ -61,7 +60,7 @@ public:
     }
 
     // output in specified format
-    std::cout << "function_name" << ",\t";
+    std::cout << F.getName().data() << ",\t";
     if (is_var_arg) {
       std::cout << "*,\t";
     } else {
@@ -75,8 +74,8 @@ public:
   }
 
   virtual bool runOnModule(Module& M) {
-    std::cerr << "15745 Function Information Pass\n"; // TODO: remove this.
     std::cout << "Module " << M.getModuleIdentifier().c_str() << std::endl;
+    std::cout << "Name,\tArgs,\tCalls,\tBlocks,\tInsns\n";
 
     // iterate through all functions in the module
     for (Module::iterator MI = M.begin(), ME = M.end(); MI != ME; ++MI) {
