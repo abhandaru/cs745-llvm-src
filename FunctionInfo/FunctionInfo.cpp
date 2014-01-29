@@ -49,7 +49,7 @@ public:
 
     // determine all quantities we need.
     bool is_var_arg = F.isVarArg();
-    size_t arg_count = F.getArgumentList().size();
+    size_t arg_count = F.arg_size();
     size_t callsite_count = 0;
     size_t block_count = blocks.size();
     size_t instruction_count = 0;
@@ -60,14 +60,15 @@ public:
     }
 
     // output in specified format
-    std::cout << F.getName().data() << ",\t";
+    cout << F.getName().data() << ",\t";
     if (is_var_arg) {
-      std::cout << "*,\t";
+      cout << "*,\t";
     } else {
-      std::cout << arg_count << ",\t";
+      cout << arg_count << ",\t";
     }
-    std::cout << callsite_count << ",\t" << block_count << ",\t"
-        << instruction_count << std::endl;
+    cout << callsite_count << ",\t";
+    cout << block_count << ",\t";
+    cout << instruction_count << endl;
 
     // always return false
     return false;
