@@ -23,6 +23,12 @@ class LocalOpts : public llvm::ModulePass {
   ~LocalOpts() { };
   virtual void getAnalysisUsage(llvm::AnalysisUsage &AU) const;
   virtual bool runOnModule(llvm::Module& module);
+  void eachFunction(llvm::Function& function);
+  void strengthReduction(llvm::BasicBlock& block);
+  void algebraicIdentities(llvm::BasicBlock& block);
+
+ private:
+  uint64_t log2(uint64_t x);
 };
 
 }

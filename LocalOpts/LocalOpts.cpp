@@ -23,7 +23,9 @@ void constantFold(BasicBlock& block) {
   }
 }
 
-void strengthReduction(BasicBlock& block) {
+void LocalOpts::strengthReduction(BasicBlock& block) {
+  LLVMContext& context = block.getContext();
+
   cout << "  block:" << endl;
   for (BasicBlock::iterator it = block.begin(); it != block.end(); ++it) {
     Instruction* instr = &(*it);
@@ -40,20 +42,40 @@ void strengthReduction(BasicBlock& block) {
       ConstantInt* leftValue = dyn_cast<ConstantInt>(left);
       ConstantInt* rightValue = dyn_cast<ConstantInt>(right);
 
+      // multiply instruction
       if (opcode == Instruction::Mul) {
         cout << " <mul>";
         if (leftInstr && rightValue) {
-          int64_t value = rightValue->getValue().getSExtValue();
+          uint64_t value = rightValue->getValue().getZExtValue();
+          uint64_t log2Value = log2(value);
           cout << " <left * " << value << ">";
+          if (value == (1 << log2Value)) {
+            ConstantInt* amount = ConstantInt::get(Type::getInt32Ty(context), log2Value);
+            Instruction* shift = BinaryOperator::Create(Instruction::Shl, leftInstr, amount);
+            ReplaceInstWithInst(block.getInstList(), it, shift);
+          }
         } else if (leftValue && rightInstr) {
-
+          uint64_t value = leftValue->getValue().getZExtValue();
+          uint64_t log2Value = log2(value);
+          if (value == (1 << log2Value)) {
+            ConstantInt* amount = ConstantInt::get(Type::getInt32Ty(context), log2Value);
+            Instruction* shift = BinaryOperator::Create(Instruction::Shl, rightInstr, amount);
+            ReplaceInstWithInst(block.getInstList(), it, shift);
+          }
         }
+
+      // divide instruction
       } else if (opcode == Instruction::SDiv) {
         cout << " <div>";
         if (leftInstr && rightValue) {
-
-        } else if (leftValue && rightInstr) {
-
+          uint64_t value = rightValue->getValue().getZExtValue();
+          uint64_t log2Value = log2(value);
+          cout << " <left / " << value << ">";
+          if (value == (1 << log2Value)) {
+            ConstantInt* amount = ConstantInt::get(Type::getInt32Ty(context), log2Value);
+            Instruction* shift = BinaryOperator::Create(Instruction::LShr, leftInstr, amount);
+            ReplaceInstWithInst(block.getInstList(), it, shift);
+          }
         }
       }
 
@@ -62,7 +84,7 @@ void strengthReduction(BasicBlock& block) {
   }
 }
 
-void algebraicIdentities(BasicBlock& block) {
+void LocalOpts::algebraicIdentities(BasicBlock& block) {
   LLVMContext& context = block.getContext();
 
   // iterate through instructions
@@ -109,7 +131,7 @@ void algebraicIdentities(BasicBlock& block) {
         }
       }
 
-      // left source is a constant
+      // right source is a constant
       else if (leftValue && rightInstr) {
         if (opcode == Instruction::Mul && leftValue->isOne()) {
           ReplaceInstWithValue(block.getInstList(), it, rightInstr);
@@ -121,26 +143,33 @@ void algebraicIdentities(BasicBlock& block) {
   }
 }
 
-void eachFunction(Function& function) {
-  cout << "function: " << function.getName().data() << endl;
-  for (Function::iterator it = function.begin(); it != function.end(); ++it) {
-    algebraicIdentities(*it);
-    // strengthReduction(*it);
-  }
-}
-
-// We don't modify the program, so we preserve all analyses
-// TODO: Change so we can actually modify.
-void LocalOpts::getAnalysisUsage(AnalysisUsage &AU) const {
-  AU.setPreservesCFG();
-}
-
 bool LocalOpts::runOnModule(Module& module) {
   std::cout << "module: " << module.getModuleIdentifier().c_str() << std::endl;
   for (Module::iterator it = module.begin(); it != module.end(); ++it) {
     eachFunction(*it);
   }
   return false;
+}
+
+void LocalOpts::eachFunction(Function& function) {
+  cout << "function: " << function.getName().data() << endl;
+  for (Function::iterator it = function.begin(); it != function.end(); ++it) {
+    // algebraicIdentities(*it);
+    strengthReduction(*it);
+  }
+}
+
+// Changed so we can actually modify the code tree.
+void LocalOpts::getAnalysisUsage(AnalysisUsage &AU) const {
+  AU.setPreservesCFG();
+}
+
+uint64_t LocalOpts::log2(uint64_t x) {
+  int i = 0;
+  while (x >>= 1) {
+    i++;
+  }
+  return i;
 }
 
 // LLVM uses the address of this static member to identify the pass, so the
