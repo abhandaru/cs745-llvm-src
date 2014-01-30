@@ -7,19 +7,80 @@ using std::endl;
 
 namespace local {
 
-void constantFold(BasicBlock& block) {
+void LocalOpts::constantFolding(BasicBlock& block) {
+  LLVMContext& context = block.getContext();
   cout << "  block:" << endl;
+  ValueMap<Value*, Value* > lastStore;
+
   for (BasicBlock::iterator it = block.begin(); it != block.end(); ++it) {
     Instruction* instr = &(*it);
     cout << "    " << instr->getOpcodeName();
-    if (BinaryOperator* binOp = dyn_cast<BinaryOperator>(instr)) {
-      // ConstantInt* a = dyn_cast<ConstantInt>(binOp->getOperand(0));
-      // ConstantInt* b = dyn_cast<ConstantInt>(binOp->getOperand(1));
-      cout << " <binary> ";
-    } else if (UnaryInstruction* unaryOp = dyn_cast<UnaryInstruction>(instr)) {
-      cout << " <unrary> ";
+    if (StoreInst* store = dyn_cast<StoreInst>(instr)) {
+      cout << " <store> ";
+      Value* pointer = store->getPointerOperand();
+      Value* value = store->getValueOperand();
+      std::pair<Value*, Value* > pair(pointer, value);
+      lastStore.erase(pointer);
+      lastStore.insert(pair);
+    } else if (LoadInst* load = dyn_cast<LoadInst>(instr)) {
+      cout << " <load>";
+      Value* pointer = load->getPointerOperand();
+      Value* value = lastStore.lookup(pointer);
+      if (value) {
+        cout << " <seen>";
+        ReplaceInstWithValue(block.getInstList(), it, value);
+      }
     }
     cout << endl;
+  }
+
+  // second pass to fold some exposed constants
+  cout << "  block -> second pass" << endl;
+  bool changed = true;
+  while (changed) {
+    changed = false;
+    for (BasicBlock::iterator it = block.begin(); it != block.end(); ++it) {
+      Instruction* instr = &(*it);
+      cout << "    " << instr->getOpcodeName();
+      if (BinaryOperator* binOp = dyn_cast<BinaryOperator>(instr)) {
+        cout << " <binary> ";
+        BinaryOperator::BinaryOps opcode = binOp->getOpcode();
+        ConstantInt* left = dyn_cast<ConstantInt>(binOp->getOperand(0));
+        ConstantInt* right = dyn_cast<ConstantInt>(binOp->getOperand(1));
+        // compress if both constant
+        if (left && right) {
+          cout << " <both const>";
+          uint64_t leftVal = left->getValue().getZExtValue();
+          uint64_t rightVal = right->getValue().getZExtValue();
+          if (opcode == Instruction::Add) {
+            cout << " <add>";
+            ConstantInt* value = ConstantInt::get(Type::getInt32Ty(context), leftVal + rightVal);
+            ReplaceInstWithValue(block.getInstList(), it, value);
+            changed = true;
+            continue;
+          } else if (opcode == Instruction::Sub) {
+            cout << " <sub>";
+            ConstantInt* value = ConstantInt::get(Type::getInt32Ty(context), leftVal - rightVal);
+            ReplaceInstWithValue(block.getInstList(), it, value);
+            changed = true;
+            continue;
+          } else if (opcode == Instruction::Mul) {
+            cout << " <mul>";
+            ConstantInt* value = ConstantInt::get(Type::getInt32Ty(context), leftVal * rightVal);
+            ReplaceInstWithValue(block.getInstList(), it, value);
+            changed = true;
+            continue;
+          } else if (opcode == Instruction::SDiv) {
+            cout << " <mul>";
+            ConstantInt* value = ConstantInt::get(Type::getInt32Ty(context), leftVal / rightVal);
+            ReplaceInstWithValue(block.getInstList(), it, value);
+            changed = true;
+            continue;
+          }
+        }
+      }
+      cout << endl;
+    }
   }
 }
 
@@ -71,7 +132,6 @@ void LocalOpts::strengthReduction(BasicBlock& block) {
           }
         }
       }
-
     }
   }
 }
@@ -147,7 +207,8 @@ void LocalOpts::eachFunction(Function& function) {
   cout << "function: " << function.getName().data() << endl;
   for (Function::iterator it = function.begin(); it != function.end(); ++it) {
     // algebraicIdentities(*it);
-    strengthReduction(*it);
+    // strengthReduction(*it);
+    constantFolding(*it);
   }
 }
 

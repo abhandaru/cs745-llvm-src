@@ -8,6 +8,8 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/User.h"
+
+#include "llvm/ADT/ValueMap.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 
 #include <ostream>
@@ -24,6 +26,7 @@ class LocalOpts : public llvm::ModulePass {
   virtual void getAnalysisUsage(llvm::AnalysisUsage &AU) const;
   virtual bool runOnModule(llvm::Module& module);
   void eachFunction(llvm::Function& function);
+  void constantFolding(llvm::BasicBlock& block);
   void strengthReduction(llvm::BasicBlock& block);
   void algebraicIdentities(llvm::BasicBlock& block);
 

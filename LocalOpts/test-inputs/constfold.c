@@ -1,10 +1,10 @@
 int compute ()
 {
-  int result = 0;
+  int result = 1 + 7;
   int a = 2;
   int b = 3;
   int c = 4 + a + b;
-  
+
   result += a;
   result += b;
   result *= c;
