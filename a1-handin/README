@@ -1,0 +1,14 @@
+Run the project normall as describe in the handout.
+
+To compile, use:
+$ make
+
+To run the FunctionInfo pass, use (in FunctionInfo/):
+$ opt -load ./FunctionInfo.so -function-info loop.bc -o out.bc
+
+To run the LocalOpts pass, use (in LocalOpts/):
+$ opt -load ./LocalOpts.so -local-opts test-inputs/strength.bc -o out.bc
+
+To see transformations use:
+$ llvm-dis out.bc
+$ cat out.ll
