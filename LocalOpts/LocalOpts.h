@@ -9,6 +9,9 @@
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/User.h"
 
+#include "llvm/Support/CFG.h"
+#include "llvm/IR/BasicBlock.h"
+
 #include <ostream>
 #include <fstream>
 #include <iostream>

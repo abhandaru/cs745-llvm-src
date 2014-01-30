@@ -7,7 +7,7 @@ using std::endl;
 
 namespace local {
 
-void constFold(BasicBlock& block) {
+void constantFold(BasicBlock& block) {
   cout << "  block:" << endl;
   for (BasicBlock::iterator it = block.begin(); it != block.end(); ++it) {
     Instruction* instr = &(*it);
@@ -64,6 +64,9 @@ void strengthReduction(BasicBlock& block) {
 
 void algebraicIdentities(BasicBlock& block) {
   cout << "  block:" << endl;
+  LLVMContext& context = block.getContext();
+
+  // iterate through instructions
   for (BasicBlock::iterator it = block.begin(); it != block.end(); ++it) {
     Instruction* instr = &(*it);
     cout << "    " << instr->getOpcodeName();
@@ -86,8 +89,10 @@ void algebraicIdentities(BasicBlock& block) {
           cout << " <same>";
           if (opcode == Instruction::Sub) {
             cout << " <subtract> -> 0";
+            ConstantInt* value = ConstantInt::get(Type::getInt32Ty(context), 0);
           } else if (opcode == Instruction::SDiv) {
             cout << " <divide> -> 1";
+            ConstantInt* value = ConstantInt::get(Type::getInt32Ty(context), 1);
           }
         }
       }
@@ -108,6 +113,7 @@ void algebraicIdentities(BasicBlock& block) {
         cout << " <instr-const>";
         if (opcode == Instruction::Mul && leftValue->isOne()) {
           cout << " <1 x instr> -> right";
+          // llvm::ReplaceInstWithInst(binOp, rightInstr);
         } else if (opcode == Instruction::Add && leftValue->isZero()) {
           cout << " <0 + instr> -> right";
         }
@@ -121,15 +127,15 @@ void algebraicIdentities(BasicBlock& block) {
 void eachFunction(Function& function) {
   cout << "function: " << function.getName().data() << endl;
   for (Function::iterator it = function.begin(); it != function.end(); ++it) {
-    // algebraicIdentities(*it);
-    strengthReduction(*it);
+    algebraicIdentities(*it);
+    // strengthReduction(*it);
   }
 }
 
 // We don't modify the program, so we preserve all analyses
 // TODO: Change so we can actually modify.
 void LocalOpts::getAnalysisUsage(AnalysisUsage &AU) const {
-  AU.setPreservesAll();
+  AU.setPreservesCFG();
 }
 
 bool LocalOpts::runOnModule(Module& module) {
