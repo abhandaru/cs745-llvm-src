@@ -178,7 +178,6 @@ void LocalOpts::algebraicIdentities(BasicBlock& block) {
 }
 
 bool LocalOpts::runOnModule(Module& module) {
-  std::cout << "module: " << module.getModuleIdentifier().c_str() << std::endl;
   for (Module::iterator it = module.begin(); it != module.end(); ++it) {
     eachFunction(*it);
   }
@@ -186,10 +185,9 @@ bool LocalOpts::runOnModule(Module& module) {
 }
 
 void LocalOpts::eachFunction(Function& function) {
-  cout << "function: " << function.getName().data() << endl;
   for (Function::iterator it = function.begin(); it != function.end(); ++it) {
-    // algebraicIdentities(*it);
-    // strengthReduction(*it);
+    algebraicIdentities(*it);
+    strengthReduction(*it);
     constantFolding(*it);
   }
 }
