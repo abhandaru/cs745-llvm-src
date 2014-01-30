@@ -32,6 +32,9 @@ class LocalOpts : public llvm::ModulePass {
 
  private:
   uint64_t log2(uint64_t x);
+  size_t strength;
+  size_t fold;
+  size_t algebra;
 };
 
 }

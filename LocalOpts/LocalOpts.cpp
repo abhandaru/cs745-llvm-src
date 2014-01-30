@@ -25,6 +25,7 @@ void LocalOpts::constantFolding(BasicBlock& block) {
       Value* value = lastStore.lookup(pointer);
       if (value) {
         ReplaceInstWithValue(block.getInstList(), it, value);
+        fold++;
       }
     }
   }
@@ -47,18 +48,22 @@ void LocalOpts::constantFolding(BasicBlock& block) {
             ConstantInt* value = ConstantInt::get(Type::getInt32Ty(context), leftVal + rightVal);
             ReplaceInstWithValue(block.getInstList(), it, value);
             changed = true;
+            fold++;
           } else if (opcode == Instruction::Sub) {
             ConstantInt* value = ConstantInt::get(Type::getInt32Ty(context), leftVal - rightVal);
             ReplaceInstWithValue(block.getInstList(), it, value);
             changed = true;
+            fold++;
           } else if (opcode == Instruction::Mul) {
             ConstantInt* value = ConstantInt::get(Type::getInt32Ty(context), leftVal * rightVal);
             ReplaceInstWithValue(block.getInstList(), it, value);
             changed = true;
+            fold++;
           } else if (opcode == Instruction::SDiv) {
             ConstantInt* value = ConstantInt::get(Type::getInt32Ty(context), leftVal / rightVal);
             ReplaceInstWithValue(block.getInstList(), it, value);
             changed = true;
+            fold++;
           }
         }
       }
@@ -91,6 +96,7 @@ void LocalOpts::strengthReduction(BasicBlock& block) {
             ConstantInt* amount = ConstantInt::get(Type::getInt32Ty(context), log2Value);
             Instruction* shift = BinaryOperator::Create(Instruction::Shl, leftInstr, amount);
             ReplaceInstWithInst(block.getInstList(), it, shift);
+            strength++;
           }
         } else if (leftValue && rightInstr) {
           uint64_t value = leftValue->getValue().getZExtValue();
@@ -99,6 +105,7 @@ void LocalOpts::strengthReduction(BasicBlock& block) {
             ConstantInt* amount = ConstantInt::get(Type::getInt32Ty(context), log2Value);
             Instruction* shift = BinaryOperator::Create(Instruction::Shl, rightInstr, amount);
             ReplaceInstWithInst(block.getInstList(), it, shift);
+            strength++;
           }
         }
 
@@ -111,6 +118,7 @@ void LocalOpts::strengthReduction(BasicBlock& block) {
             ConstantInt* amount = ConstantInt::get(Type::getInt32Ty(context), log2Value);
             Instruction* shift = BinaryOperator::Create(Instruction::LShr, leftInstr, amount);
             ReplaceInstWithInst(block.getInstList(), it, shift);
+            strength++;
           }
         }
       }
@@ -141,10 +149,12 @@ void LocalOpts::algebraicIdentities(BasicBlock& block) {
           if (opcode == Instruction::Sub) {
             ConstantInt* value = ConstantInt::get(Type::getInt32Ty(context), 0);
             ReplaceInstWithValue(block.getInstList(), it, value);
+            algebra++;
           } else if (opcode == Instruction::SDiv) {
             // TODO: does not catch divide by zero
             ConstantInt* value = ConstantInt::get(Type::getInt32Ty(context), 1);
             ReplaceInstWithValue(block.getInstList(), it, value);
+            algebra++;
           }
         }
         // clean up references if possible
@@ -159,9 +169,11 @@ void LocalOpts::algebraicIdentities(BasicBlock& block) {
         if ((opcode == Instruction::Mul || opcode == Instruction::SDiv) &&
              rightValue->isOne()) {
           ReplaceInstWithValue(block.getInstList(), it, leftInstr);
+          algebra++;
         } else if ((opcode == Instruction::Add || opcode == Instruction::Sub) &&
                     rightValue->isZero()) {
           ReplaceInstWithValue(block.getInstList(), it, leftInstr);
+          algebra++;
         }
       }
 
@@ -169,8 +181,10 @@ void LocalOpts::algebraicIdentities(BasicBlock& block) {
       else if (leftValue && rightInstr) {
         if (opcode == Instruction::Mul && leftValue->isOne()) {
           ReplaceInstWithValue(block.getInstList(), it, rightInstr);
+          algebra++;
         } else if (opcode == Instruction::Add && leftValue->isZero()) {
           ReplaceInstWithValue(block.getInstList(), it, rightInstr);
+          algebra++;
         }
       }
     }
@@ -178,9 +192,21 @@ void LocalOpts::algebraicIdentities(BasicBlock& block) {
 }
 
 bool LocalOpts::runOnModule(Module& module) {
+  // init counters
+  strength = 0;
+  fold = 0;
+  algebra = 0;
+
+  // run over functions
   for (Module::iterator it = module.begin(); it != module.end(); ++it) {
     eachFunction(*it);
   }
+
+  // print out tranform counts
+  cout << "Transformations applied:" << endl;
+  cout << "  Algebraic Identities: " << algebra << endl;
+  cout << "  Constant Folding: " << fold << endl;
+  cout << "  Strength Reductions: " << strength << endl;
   return false;
 }
 
