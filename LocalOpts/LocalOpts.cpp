@@ -26,12 +26,9 @@ void constantFold(BasicBlock& block) {
 void LocalOpts::strengthReduction(BasicBlock& block) {
   LLVMContext& context = block.getContext();
 
-  cout << "  block:" << endl;
   for (BasicBlock::iterator it = block.begin(); it != block.end(); ++it) {
     Instruction* instr = &(*it);
-    cout << "    " << instr->getOpcodeName();
     if (BinaryOperator* binOp = dyn_cast<BinaryOperator>(instr)) {
-      cout << " <binary>";
       BinaryOperator::BinaryOps opcode = binOp->getOpcode();
       Value* left = binOp->getOperand(0);
       Value* right = binOp->getOperand(1);
@@ -44,11 +41,9 @@ void LocalOpts::strengthReduction(BasicBlock& block) {
 
       // multiply instruction
       if (opcode == Instruction::Mul) {
-        cout << " <mul>";
         if (leftInstr && rightValue) {
           uint64_t value = rightValue->getValue().getZExtValue();
           uint64_t log2Value = log2(value);
-          cout << " <left * " << value << ">";
           if (value == (1 << log2Value)) {
             ConstantInt* amount = ConstantInt::get(Type::getInt32Ty(context), log2Value);
             Instruction* shift = BinaryOperator::Create(Instruction::Shl, leftInstr, amount);
@@ -66,11 +61,9 @@ void LocalOpts::strengthReduction(BasicBlock& block) {
 
       // divide instruction
       } else if (opcode == Instruction::SDiv) {
-        cout << " <div>";
         if (leftInstr && rightValue) {
           uint64_t value = rightValue->getValue().getZExtValue();
           uint64_t log2Value = log2(value);
-          cout << " <left / " << value << ">";
           if (value == (1 << log2Value)) {
             ConstantInt* amount = ConstantInt::get(Type::getInt32Ty(context), log2Value);
             Instruction* shift = BinaryOperator::Create(Instruction::LShr, leftInstr, amount);
@@ -80,7 +73,6 @@ void LocalOpts::strengthReduction(BasicBlock& block) {
       }
 
     }
-    cout << endl;
   }
 }
 
