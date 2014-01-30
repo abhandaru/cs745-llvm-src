@@ -23,8 +23,43 @@ void constFold(BasicBlock& block) {
   }
 }
 
-Value* algebraicReduction() {
+void strengthReduction(BasicBlock& block) {
+  cout << "  block:" << endl;
+  for (BasicBlock::iterator it = block.begin(); it != block.end(); ++it) {
+    Instruction* instr = &(*it);
+    cout << "    " << instr->getOpcodeName();
+    if (BinaryOperator* binOp = dyn_cast<BinaryOperator>(instr)) {
+      cout << " <binary>";
+      BinaryOperator::BinaryOps opcode = binOp->getOpcode();
+      Value* left = binOp->getOperand(0);
+      Value* right = binOp->getOperand(1);
 
+      // determine the operand types
+      Instruction* leftInstr = dyn_cast<Instruction>(left);
+      Instruction* rightInstr = dyn_cast<Instruction>(right);
+      ConstantInt* leftValue = dyn_cast<ConstantInt>(left);
+      ConstantInt* rightValue = dyn_cast<ConstantInt>(right);
+
+      if (opcode == Instruction::Mul) {
+        cout << " <mul>";
+        if (leftInstr && rightValue) {
+          int64_t value = rightValue->getValue().getSExtValue();
+          cout << " <left * " << value << ">";
+        } else if (leftValue && rightInstr) {
+
+        }
+      } else if (opcode == Instruction::SDiv) {
+        cout << " <div>";
+        if (leftInstr && rightValue) {
+
+        } else if (leftValue && rightInstr) {
+
+        }
+      }
+
+    }
+    cout << endl;
+  }
 }
 
 void algebraicIdentities(BasicBlock& block) {
@@ -58,12 +93,23 @@ void algebraicIdentities(BasicBlock& block) {
       }
 
       // left source is a constant
-      if (leftInstr && rightValue) {
+      else if (leftInstr && rightValue) {
         cout << " <instr-const>";
-        if (rightValue->isOne() && opcode == Instruction::Mul) {
-          cout << " <mul x 1> -> left";
-        } else if (rightValue->isZero() && opcode == Instruction::Add) {
-          cout << " <add + 0> -> left";
+        if (opcode == Instruction::Mul && rightValue->isOne()) {
+          cout << " <instr x 1> -> left";
+        } else if ((opcode == Instruction::Add || opcode == Instruction::Sub) &&
+                    rightValue->isZero()) {
+          cout << " <instr +- 0> -> left";
+        }
+      }
+
+      // left source is a constant
+      else if (leftValue && rightInstr) {
+        cout << " <instr-const>";
+        if (opcode == Instruction::Mul && leftValue->isOne()) {
+          cout << " <1 x instr> -> right";
+        } else if (opcode == Instruction::Add && leftValue->isZero()) {
+          cout << " <0 + instr> -> right";
         }
       }
     }
@@ -75,7 +121,8 @@ void algebraicIdentities(BasicBlock& block) {
 void eachFunction(Function& function) {
   cout << "function: " << function.getName().data() << endl;
   for (Function::iterator it = function.begin(); it != function.end(); ++it) {
-    algebraicIdentities(*it);
+    // algebraicIdentities(*it);
+    strengthReduction(*it);
   }
 }
 
