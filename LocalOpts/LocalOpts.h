@@ -8,9 +8,7 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/User.h"
-
-#include "llvm/Support/CFG.h"
-#include "llvm/IR/BasicBlock.h"
+#include "llvm/Transforms/Utils/BasicBlockUtils.h"
 
 #include <ostream>
 #include <fstream>

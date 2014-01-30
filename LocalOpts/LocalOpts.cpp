@@ -90,21 +90,32 @@ void algebraicIdentities(BasicBlock& block) {
           if (opcode == Instruction::Sub) {
             cout << " <subtract> -> 0";
             ConstantInt* value = ConstantInt::get(Type::getInt32Ty(context), 0);
+            ReplaceInstWithValue(block.getInstList(), it, value);
           } else if (opcode == Instruction::SDiv) {
             cout << " <divide> -> 1";
+            // TODO: does not catch divide by zero
             ConstantInt* value = ConstantInt::get(Type::getInt32Ty(context), 1);
+            ReplaceInstWithValue(block.getInstList(), it, value);
           }
         }
+        // clean up references if possible
+        if (leftInstr->use_empty())
+          leftInstr->eraseFromParent();
+        if (rightInstr->use_empty())
+          rightInstr->eraseFromParent();
       }
 
       // left source is a constant
       else if (leftInstr && rightValue) {
         cout << " <instr-const>";
-        if (opcode == Instruction::Mul && rightValue->isOne()) {
-          cout << " <instr x 1> -> left";
+        if ((opcode == Instruction::Mul || opcode == Instruction::SDiv) &&
+             rightValue->isOne()) {
+          cout << " <instr x/ 1> -> left";
+          ReplaceInstWithValue(block.getInstList(), it, leftInstr);
         } else if ((opcode == Instruction::Add || opcode == Instruction::Sub) &&
                     rightValue->isZero()) {
           cout << " <instr +- 0> -> left";
+          ReplaceInstWithValue(block.getInstList(), it, leftInstr);
         }
       }
 
@@ -113,14 +124,14 @@ void algebraicIdentities(BasicBlock& block) {
         cout << " <instr-const>";
         if (opcode == Instruction::Mul && leftValue->isOne()) {
           cout << " <1 x instr> -> right";
-          // llvm::ReplaceInstWithInst(binOp, rightInstr);
+          ReplaceInstWithValue(block.getInstList(), it, rightInstr);
         } else if (opcode == Instruction::Add && leftValue->isZero()) {
           cout << " <0 + instr> -> right";
+          ReplaceInstWithValue(block.getInstList(), it, rightInstr);
         }
       }
     }
     cout << endl;
-
   }
 }
 
