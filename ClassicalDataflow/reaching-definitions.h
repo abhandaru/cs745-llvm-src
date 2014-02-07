@@ -10,10 +10,10 @@
 
 namespace llvm {
 
-class Liveness : public DataFlowPass {
+class ReachingDefinitions : public DataFlowPass {
  public:
   static char ID;
-  Liveness();
+  ReachingDefinitions() : DataFlowPass(ID) { }
   virtual bool runOnFunction(Function& F);
   virtual void getAnalysisUsage(AnalysisUsage& AU) const;
 };

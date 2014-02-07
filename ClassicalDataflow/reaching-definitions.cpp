@@ -2,38 +2,26 @@
 // Group: akbhanda, zheq
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "llvm/IR/Function.h"
-#include "llvm/Pass.h"
-#include "llvm/Support/raw_ostream.h"
+#include "reaching-definitions.h"
 
-#include "dataflow.h"
+namespace llvm {
 
-using namespace llvm;
 
-namespace {
+bool ReachingDefinitions::runOnFunction(Function& F) {
+  ExampleFunctionPrinter(errs(), F);
 
-class ReachingDefinitions : public DataFlowPass {
- public:
-  static char ID;
+  // Did not modify the incoming Function.
+  return false;
+}
 
-  ReachingDefinitions() : DataFlowPass(ID) { }
 
-  virtual bool runOnFunction(Function& F) {
-    ExampleFunctionPrinter(errs(), F);
+void ReachingDefinitions::getAnalysisUsage(AnalysisUsage& AU) const {
+  AU.setPreservesCFG();
+}
 
-    // Did not modify the incoming Function.
-    return false;
-  }
-
-  virtual void getAnalysisUsage(AnalysisUsage& AU) const {
-    AU.setPreservesCFG();
-  }
-
- private:
-};
 
 char ReachingDefinitions::ID = 0;
-RegisterPass<ReachingDefinitions> X("reach",
-    "15745 ReachingDefinitions");
+RegisterPass<ReachingDefinitions> X("reach", "15745 ReachingDefinitions");
+
 
 }

@@ -1,6 +1,16 @@
+// 15-745 S14 Assignment 2: reaching-definitions.cpp
+// Group: akbhanda, zheq
+////////////////////////////////////////////////////////////////////////////////
+
 #include "liveness.h"
 
 namespace llvm {
+
+
+Liveness::Liveness() : DataFlowPass(ID) {
+  meet = INTERSECTION;
+  direction = FORWARDS;
+};
 
 
 bool Liveness::runOnFunction(Function& F) {
@@ -17,5 +27,6 @@ void Liveness::getAnalysisUsage(AnalysisUsage& AU) const {
 
 char Liveness::ID = 0;
 RegisterPass<Liveness> X("live", "15745 Liveness");
+
 
 }
