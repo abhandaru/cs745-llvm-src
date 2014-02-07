@@ -6,6 +6,7 @@
 #define __CLASSICAL_DATAFLOW_DATAFLOW_H__
 
 #include <stdio.h>
+#include <set>
 
 #include "llvm/IR/Instructions.h"
 #include "llvm/ADT/BitVector.h"
@@ -17,6 +18,9 @@
 
 namespace llvm {
 
+class Assignment;
+typedef std::set<Assignment> Assignments;
+
 enum MeetOperator {
   INTERSECTION,
   UNION
@@ -27,14 +31,28 @@ enum Direction {
   BACKWARDS
 };
 
-class TranferFunction {
+class Assignment {
+ public:
+  Value* pointer;
+};
 
+class GenKill {
+ public:
+  Assignments generate;
+  Assignments kill;
 };
 
 class DataFlowPass : public FunctionPass {
  public:
   DataFlowPass(char ID) : FunctionPass(ID) { };
   void ExampleFunctionPrinter(raw_ostream& O, const Function& F);
+  Assignments transferFunction(Assignments input);
+  virtual Assignments generate(const BasicBlock& block);
+  virtual Assignments kill(const BasicBlock& block);
+
+  // data
+  MeetOperator meet;
+  Direction direction;
  private:
   void PrintInstructionOps(raw_ostream& O, const Instruction* I);
 };

@@ -13,7 +13,7 @@ namespace llvm {
 class Liveness : public DataFlowPass {
  public:
   static char ID;
-  Liveness() : DataFlowPass(ID) { };
+  Liveness();
   virtual bool runOnFunction(Function& F);
   virtual void getAnalysisUsage(AnalysisUsage& AU) const;
 };

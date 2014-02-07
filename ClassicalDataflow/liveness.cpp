@@ -7,6 +7,12 @@
 namespace llvm {
 
 
+Liveness::Liveness() : DataFlowPass(ID) {
+  meet = INTERSECTION;
+  direction = FORWARDS;
+};
+
+
 bool Liveness::runOnFunction(Function& F) {
   ExampleFunctionPrinter(errs(), F);
   // Did not modify the incoming Function.
@@ -21,5 +27,6 @@ void Liveness::getAnalysisUsage(AnalysisUsage& AU) const {
 
 char Liveness::ID = 0;
 RegisterPass<Liveness> X("live", "15745 Liveness");
+
 
 }
