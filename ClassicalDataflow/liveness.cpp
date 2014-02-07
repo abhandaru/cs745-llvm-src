@@ -1,12 +1,4 @@
-// 15-745 S14 Assignment 2: liveness.cpp
-// Group: bovik, bovik2
-////////////////////////////////////////////////////////////////////////////////
-
-#include "llvm/IR/Function.h"
-#include "llvm/Pass.h"
-#include "llvm/Support/raw_ostream.h"
-
-#include "dataflow.h"
+#include "liveness.h"
 
 using namespace llvm;
 
@@ -33,6 +25,6 @@ class Liveness : public FunctionPass {
 };
 
 char Liveness::ID = 0;
-RegisterPass<Liveness> X("cd-liveness", "15745 Liveness");
+RegisterPass<Liveness> X("live", "15745 Liveness");
 
 }
