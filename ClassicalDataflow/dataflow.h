@@ -15,6 +15,11 @@
 #include "llvm/Support/CFG.h"
 #include "llvm/Pass.h"
 
+#include <ostream>
+#include <fstream>
+#include <iostream>
+
+
 namespace llvm {
 
 enum MeetOperator {
