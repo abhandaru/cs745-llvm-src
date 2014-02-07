@@ -1,5 +1,5 @@
 // 15-745 S14 Assignment 2: reaching-definitions.cpp
-// Group: bovik, bovik2
+// Group: akbhanda, zheq
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "llvm/IR/Function.h"
@@ -33,7 +33,7 @@ class ReachingDefinitions : public DataFlowPass {
 };
 
 char ReachingDefinitions::ID = 0;
-RegisterPass<ReachingDefinitions> X("cd-reaching-definitions",
+RegisterPass<ReachingDefinitions> X("reach",
     "15745 ReachingDefinitions");
 
 }
