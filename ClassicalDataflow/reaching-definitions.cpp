@@ -12,11 +12,11 @@ using namespace llvm;
 
 namespace {
 
-class ReachingDefinitions : public FunctionPass {
+class ReachingDefinitions : public DataFlowPass {
  public:
   static char ID;
 
-  ReachingDefinitions() : FunctionPass(ID) { }
+  ReachingDefinitions() : DataFlowPass(ID) { }
 
   virtual bool runOnFunction(Function& F) {
     ExampleFunctionPrinter(errs(), F);

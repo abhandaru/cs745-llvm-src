@@ -13,14 +13,31 @@
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/ValueMap.h"
 #include "llvm/Support/CFG.h"
+#include "llvm/Pass.h"
 
 namespace llvm {
 
-// Add definitions (and code, depending on your strategy) for your dataflow
-// abstraction here.
+enum MeetOperator {
+  INTERSECTION,
+  UNION
+};
 
-// Prints a representation of F to raw_ostream O.
-void ExampleFunctionPrinter(raw_ostream& O, const Function& F);
+enum Direction {
+  FORWARDS,
+  BACKWARDS
+};
+
+class TranferFunction {
+
+};
+
+class DataFlowPass : public FunctionPass {
+ public:
+  DataFlowPass(char ID) : FunctionPass(ID) { };
+  void ExampleFunctionPrinter(raw_ostream& O, const Function& F);
+ private:
+  void PrintInstructionOps(raw_ostream& O, const Instruction* I);
+};
 
 }
 
