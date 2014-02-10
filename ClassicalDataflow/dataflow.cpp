@@ -4,7 +4,22 @@
 
 #include "dataflow.h"
 
+
+using std::cout;
+using std::endl;
+
+
 namespace llvm {
+
+
+DataFlowPass::DataFlowPass(char id, Top top, Meet meet, Direction direction) :
+    FunctionPass(id),
+    _top(top),
+    _meet(meet),
+    _direction(direction) {
+  cout << ">> DataFlowPass() constructor" << endl;
+};
+
 
 void DataFlowPass::ExampleFunctionPrinter(raw_ostream& O, const Function& F) {
   for (Function::const_iterator FI = F.begin(), FE = F.end(); FI != FE; ++FI) {
@@ -20,6 +35,7 @@ void DataFlowPass::ExampleFunctionPrinter(raw_ostream& O, const Function& F) {
   }
 }
 
+
 void DataFlowPass::PrintInstructionOps(raw_ostream& O, const Instruction* I) {
   O << "\nOps: {";
   if (I != NULL) {
@@ -32,5 +48,6 @@ void DataFlowPass::PrintInstructionOps(raw_ostream& O, const Instruction* I) {
   }
   O << "}\n";
 }
+
 
 }
