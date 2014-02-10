@@ -28,5 +28,4 @@ void Liveness::getAnalysisUsage(AnalysisUsage& AU) const {
 char Liveness::ID = 0;
 RegisterPass<Liveness> X("live", "15745 Liveness");
 
-
 }

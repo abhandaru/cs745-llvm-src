@@ -12,7 +12,7 @@ namespace llvm {
 
 // Add code for your dataflow abstraction here (if necessary).
 
-SmallSet<Value*, 10, std::less<Value*> > Gen(BasicBlock& block) {
+SmallSet<Value*, 10, std::less<Value*> > DataFlowPass::Gen(BasicBlock& block) {
   SmallSet<Value*, 10, std::less<Value*> > genSet;
   for (BasicBlock::iterator it = block.begin(); it != block.end(); ++it) {
     Instruction* instr = &(*it);
@@ -27,11 +27,11 @@ SmallSet<Value*, 10, std::less<Value*> > Gen(BasicBlock& block) {
   return genSet;
 }
 
-void Kill(BasicBlock& B) {
+SmallSet<Value*, 10, std::less<Value*> > DataFlowPass::Kill(BasicBlock& B, Function& F) {
 
 }
 
-SmallSet<Value*, 10, std::less<Value*> > Use(BasicBlock& block) {
+SmallSet<Value*, 10, std::less<Value*> > DataFlowPass::Use(BasicBlock& block) {
   SmallSet<Value*, 10, std::less<Value*> > loadSet;
   for (BasicBlock::iterator it = block.begin(); it != block.end(); ++it) {
     Instruction* instr = &(*it);
