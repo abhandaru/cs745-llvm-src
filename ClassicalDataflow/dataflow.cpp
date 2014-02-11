@@ -7,56 +7,91 @@
 using std::cout;
 using std::endl;
 
+
 namespace llvm {
 
 
-// Add code for your dataflow abstraction here (if necessary).
+DataFlowPass::DataFlowPass(char id, Top top, Meet meet, Direction direction) :
+    FunctionPass(id),
+    _top(top),
+    _meet(meet),
+    _direction(direction) {
+  cout << ">> DataFlowPass() constructor" << endl;
+};
 
-SmallSet<Value*, 10, std::less<Value*> > DataFlowPass::Gen(BasicBlock& block) {
-  SmallSet<Value*, 10, std::less<Value*> > genSet;
-  for (BasicBlock::iterator it = block.begin(); it != block.end(); ++it) {
-    Instruction* instr = &(*it);
-    if (StoreInst* store = dyn_cast<StoreInst>(instr)) {
-      Value* pointer = store->getPointerOperand();
-      if (!genSet.count(pointer)) {
-        genSet.insert(pointer);
-        cout << "haha" << endl;
+
+void DataFlowPass::transferFunction(const Assignments& generate,
+    const Assignments& kill, Assignments& input, Assignments& output) {
+  output = input;
+  DataFlowUtil::setSubtract(output, kill);
+  if (_meet == UNION) {
+    DataFlowUtil::setUnion(output, generate);
+  } else if (_meet == INTERSECTION) {
+    DataFlowUtil::setIntersect(output, generate);
+  }
+}
+
+
+bool DataFlowPass::runOnFunction(Function& fn) {
+  // ExampleFunctionPrinter(errs(), fn);
+  cout << "  Function: " << fn.getName().data() << endl;
+
+  // First pass: precompute generate and kill sets.
+  BlockStates states;
+  for (Function::const_iterator FI = fn.begin(), FE = fn.end(); FI != FE; ++FI) {
+    const BasicBlock& block = *FI;
+    cout << "    Block: " << block.getName().data() << endl;
+    BlockState state;
+    state.generates = generate(block);
+    state.kills = kill(block);
+    // insert into map
+    states.insert(BlockStatePair(&block, state));
+    cout << endl;
+  }
+
+  // iterate for a forwards pass
+  if (_direction == FORWARDS) {
+    const BasicBlock& start = fn.front();
+
+  // iterate for a backwards pass
+  } else if (_direction == BACKWARDS) {
+
+    // set up initial conditions.
+    // TODO: Set start_state.out = to correct TOP.
+    const BasicBlock& start = fn.back();
+    BlockState& start_state = states[&start];
+
+    // start at the back and traverse inverse graph
+    std::queue<const BasicBlock*> worklist;
+    worklist.push(&start);
+
+    while (!worklist.empty()) {
+      // inspect 1st element
+      const BasicBlock* current = worklist.front();
+      BlockState& state = states[current];
+      cout << "    Block: " << current->getName().data() << endl;
+      worklist.pop();
+
+
+
+      for (const_pred_iterator I = pred_begin(current), IE = pred_end(current);
+          I != IE; ++I) {
+        const BasicBlock* predecessor = *I;
+
+
+
       }
     }
   }
-  return genSet;
+
+  // Does not modify the incoming Function.
+  cout << endl;
+  return false;
 }
 
-SmallSet<Value*, 10, std::less<Value*> > DataFlowPass::Kill(BasicBlock& B, Function& F) {
 
-}
-
-SmallSet<Value*, 10, std::less<Value*> > DataFlowPass::Use(BasicBlock& block) {
-  SmallSet<Value*, 10, std::less<Value*> > loadSet;
-  for (BasicBlock::iterator it = block.begin(); it != block.end(); ++it) {
-    Instruction* instr = &(*it);
-    if (LoadInst* load = dyn_cast<LoadInst>(instr)) {
-      Value* pointer = load->getPointerOperand();
-      if (!loadSet.count(pointer)) {
-        loadSet.insert(pointer);
-        cout << "pupu" << endl;
-      }
-    }
-  }
-  return loadSet;
-}
-
-void PrintInstructionOps(raw_ostream& O, const Instruction* I) {
-  O << "\nOps: {";
-  if (I != NULL) {
-    for (Instruction::const_op_iterator OI = I->op_begin(), OE = I->op_end();
-        OI != OE; ++OI) {
-      const Value* v = OI->get();
-      v->print(O);
-      O << ";";
-    }
-  }
-  O << "}\n";
+void DataFlowPass::getAnalysisUsage(AnalysisUsage& AU) const {
+  AU.setPreservesCFG();
 }
 
 void DataFlowPass::ExampleFunctionPrinter(raw_ostream& O, const Function& F) {
@@ -73,6 +108,7 @@ void DataFlowPass::ExampleFunctionPrinter(raw_ostream& O, const Function& F) {
   }
 }
 
+
 void DataFlowPass::PrintInstructionOps(raw_ostream& O, const Instruction* I) {
   O << "\nOps: {";
   if (I != NULL) {
@@ -85,5 +121,6 @@ void DataFlowPass::PrintInstructionOps(raw_ostream& O, const Instruction* I) {
   }
   O << "}\n";
 }
+
 
 }

@@ -1,27 +1,31 @@
-// 15-745 S14 Assignment 2: reaching-definitions.cpp
+// 15-745 S14 Assignment 2: liveness.cpp
 // Group: akbhanda, zheq
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 #include "liveness.h"
+
+
+using std::cout;
+using std::endl;
+
 
 namespace llvm {
 
 
-Liveness::Liveness() : DataFlowPass(ID) {
-  meet = INTERSECTION;
-  direction = FORWARDS;
+Liveness::Liveness() : DataFlowPass(ID, NONE, UNION, BACKWARDS) {
+  cout << ">> Liveness() constructor" << endl;
 };
 
 
-bool Liveness::runOnFunction(Function& F) {
-  ExampleFunctionPrinter(errs(), F);
-  // Did not modify the incoming Function.
-  return false;
+Assignments Liveness::generate(const BasicBlock& block) {
+  // TODO: This is just an example.
+  return DataFlowUtil::uses(block);
 }
 
 
-void Liveness::getAnalysisUsage(AnalysisUsage& AU) const {
-  AU.setPreservesCFG();
+Assignments Liveness::kill(const BasicBlock& block) {
+  // TODO: This is just an example.
+  return DataFlowUtil::defines(block);
 }
 
 
