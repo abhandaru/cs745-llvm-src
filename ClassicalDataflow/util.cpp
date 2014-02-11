@@ -13,7 +13,7 @@ namespace llvm {
 
 
 Assignments DataFlowUtil::uses(const BasicBlock& block) {
-  cout << ">>     Uses:" << endl;
+  cout << "      Uses:" << endl;
   Assignments loads;
   for (BasicBlock::const_iterator it = block.begin(); it != block.end(); ++it) {
     const Instruction& instr = *it;
@@ -31,7 +31,7 @@ Assignments DataFlowUtil::uses(const BasicBlock& block) {
 
 
 Assignments DataFlowUtil::defines(const BasicBlock& block) {
-  cout << ">>     Defines:" << endl;
+  cout << "      Defines:" << endl;
   Assignments stores;
   for (BasicBlock::const_iterator it = block.begin(); it != block.end(); ++it) {
     const Instruction& instr = *it;
@@ -45,6 +45,21 @@ Assignments DataFlowUtil::defines(const BasicBlock& block) {
     }
   }
   return stores;
+}
+
+
+void DataFlowUtil::setSubtract(Assignments& dest, const Assignments& src) {
+
+}
+
+
+void DataFlowUtil::setUnion(Assignments& dest, const Assignments& src) {
+
+}
+
+
+void DataFlowUtil::setIntersect(Assignments& dest, const Assignments& src) {
+
 }
 
 

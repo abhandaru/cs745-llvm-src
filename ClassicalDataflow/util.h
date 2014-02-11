@@ -44,8 +44,8 @@ class BlockState {
   Assignments kills;
 };
 
-typedef  DenseMap<const BasicBlock*, BlockState> BlockStates;
-typedef  std::pair<const BasicBlock*, BlockState> BlockStatePair;
+typedef DenseMap<const BasicBlock*, BlockState> BlockStates;
+typedef std::pair<const BasicBlock*, BlockState> BlockStatePair;
 
 
 //
@@ -56,9 +56,12 @@ class DataFlowUtil {
  public:
   static Assignments uses(const BasicBlock& block);
   static Assignments defines(const BasicBlock& block);
+  static void setSubtract(Assignments& dest, const Assignments& src);
+  static void setUnion(Assignments& dest, const Assignments& src);
+  static void setIntersect(Assignments& dest, const Assignments& src);
 };
 
-}
 
+}
 
 #endif

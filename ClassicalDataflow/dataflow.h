@@ -6,6 +6,7 @@
 #define __CLASSICAL_DATAFLOW_DATAFLOW_H__
 
 #include <iostream>
+#include <queue>
 
 #include "llvm/IR/Instructions.h"
 #include "llvm/ADT/BitVector.h"
@@ -42,7 +43,8 @@ class DataFlowPass : public FunctionPass {
  public:
   DataFlowPass(char id, Top top, Meet meet, Direction direction);
   void ExampleFunctionPrinter(raw_ostream& O, const Function& F);
-  Assignments transferFunction(const Assignments& input);
+  void transferFunction(const Assignments& generate, const Assignments& kill,
+    Assignments& input, Assignments& output);
   virtual Assignments generate(const BasicBlock& block) = 0;
   virtual Assignments kill(const BasicBlock& block) = 0;
   // pass API
