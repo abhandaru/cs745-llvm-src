@@ -21,6 +21,38 @@ DataFlowPass::DataFlowPass(char id, Top top, Meet meet, Direction direction) :
 };
 
 
+bool DataFlowPass::runOnFunction(Function& fn) {
+  // ExampleFunctionPrinter(errs(), fn);
+  cout << ">> Function: " << fn.getName().data() << endl;
+
+  BlockStates states;
+  for (Function::const_iterator FI = fn.begin(), FE = fn.end(); FI != FE; ++FI) {
+    const BasicBlock& block = *FI;
+    BlockState state;
+    state.generates = generate(block);
+    state.kills = kill(block);
+    // insert into map
+    states.insert(BlockStatePair(&block, state));
+    cout << ">>   Block:" << endl;
+  }
+
+  // iterate in correct direction
+  if (_direction == FORWARDS) {
+    const BasicBlock& start = fn.front();
+  } else if (_direction == BACKWARDS) {
+    const BasicBlock& start = fn.back();
+  }
+
+  // Does not modify the incoming Function.
+  return false;
+}
+
+
+void DataFlowPass::getAnalysisUsage(AnalysisUsage& AU) const {
+  AU.setPreservesCFG();
+}
+
+
 void DataFlowPass::ExampleFunctionPrinter(raw_ostream& O, const Function& F) {
   for (Function::const_iterator FI = F.begin(), FE = F.end(); FI != FE; ++FI) {
     const BasicBlock* block = FI;

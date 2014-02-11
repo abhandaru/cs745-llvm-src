@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <set>
+#include <utility>
 
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallSet.h"
@@ -23,20 +24,28 @@ namespace llvm {
 
 class Assignment {
  public:
-  Assignment(Value *ptr) : pointer(ptr) { };
-  Value* pointer;
-  inline bool operator==(const Assignment& rhs) {
+  Assignment(const Value *ptr) : pointer(ptr) { };
+  const Value* pointer;
+  inline bool operator==(const Assignment& rhs) const {
     return pointer == rhs.pointer;
+  }
+  inline bool operator<(const Assignment& rhs) const {
+    return pointer < rhs.pointer;
   }
 };
 
 typedef SmallSet<Assignment, 10, std::less<Assignment> > Assignments;
 
-class GenKill {
+class BlockState {
  public:
-  Assignments generate;
-  Assignments kill;
+  Assignments in;
+  Assignments out;
+  Assignments generates;
+  Assignments kills;
 };
+
+typedef  DenseMap<const BasicBlock*, BlockState> BlockStates;
+typedef  std::pair<const BasicBlock*, BlockState> BlockStatePair;
 
 
 //

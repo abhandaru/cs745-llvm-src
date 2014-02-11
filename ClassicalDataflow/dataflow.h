@@ -10,14 +10,18 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/ADT/BitVector.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/DepthFirstIterator.h"
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/ValueMap.h"
 #include "llvm/Support/CFG.h"
+#include "llvm/Support/raw_ostream.h"
 #include "llvm/Pass.h"
 
 #include "util.h"
 
+
 namespace llvm {
+
 
 enum Meet {
   INTERSECTION,
@@ -41,6 +45,9 @@ class DataFlowPass : public FunctionPass {
   Assignments transferFunction(const Assignments& input);
   virtual Assignments generate(const BasicBlock& block) = 0;
   virtual Assignments kill(const BasicBlock& block) = 0;
+  // pass API
+  virtual bool runOnFunction(Function& F);
+  virtual void getAnalysisUsage(AnalysisUsage& AU) const;
 
  protected:
   const Top _top;
@@ -50,6 +57,7 @@ class DataFlowPass : public FunctionPass {
  private:
   void PrintInstructionOps(raw_ostream& O, const Instruction* I);
 };
+
 
 }
 

@@ -24,20 +24,7 @@ Assignments ReachingDefinitions::generate(const BasicBlock& block) {
 
 
 Assignments ReachingDefinitions::kill(const BasicBlock& block) {
-  return DataFlowUtil::uses(block);
-}
-
-
-bool ReachingDefinitions::runOnFunction(Function& F) {
-  ExampleFunctionPrinter(errs(), F);
-
-  // Did not modify the incoming Function.
-  return false;
-}
-
-
-void ReachingDefinitions::getAnalysisUsage(AnalysisUsage& AU) const {
-  AU.setPreservesCFG();
+  return DataFlowUtil::defines(block);
 }
 
 

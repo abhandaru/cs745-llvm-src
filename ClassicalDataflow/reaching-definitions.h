@@ -22,10 +22,6 @@ class ReachingDefinitions : public DataFlowPass {
   ReachingDefinitions();
   Assignments generate(const BasicBlock& block);
   Assignments kill(const BasicBlock& block);
-
-  // pass API
-  virtual bool runOnFunction(Function& F);
-  virtual void getAnalysisUsage(AnalysisUsage& AU) const;
 };
 
 

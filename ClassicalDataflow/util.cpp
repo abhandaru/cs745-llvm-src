@@ -13,35 +13,37 @@ namespace llvm {
 
 
 Assignments DataFlowUtil::uses(const BasicBlock& block) {
+  cout << ">>     Uses:" << endl;
   Assignments loads;
-  // for (BasicBlock::iterator it = block.begin(); it != block.end(); ++it) {
-  //   Instruction* instr = &(*it);
-  //   if (LoadInst* load = dyn_cast<LoadInst>(instr)) {
-  //     Value* pointer = load->getPointerOperand();
-  //     Assignment assign(pointer);
-  //     if (!loadSet.count(assign)) {
-  //       loadSet.insert(assign);
-  //       cout << "pupu" << endl;
-  //     }
-  //   }
-  // }
+  for (BasicBlock::const_iterator it = block.begin(); it != block.end(); ++it) {
+    const Instruction& instr = *it;
+    if (const LoadInst* load = dyn_cast<LoadInst>(&instr)) {
+      const Value* pointer = load->getPointerOperand();
+      Assignment assign(pointer);
+      if (!loads.count(assign)) {
+        loads.insert(assign);
+        load->dump();
+      }
+    }
+  }
   return loads;
 }
 
 
 Assignments DataFlowUtil::defines(const BasicBlock& block) {
+  cout << ">>     Defines:" << endl;
   Assignments stores;
-  // for (BasicBlock::iterator it = block.begin(); it != block.end(); ++it) {
-  //   Instruction* instr = &(*it);
-  //   if (StoreInst* store = dyn_cast<StoreInst>(instr)) {
-  //     Value* pointer = store->getPointerOperand();
-  //     Assignment assign(pointer);
-  //     if (!stores.count(assign)) {
-  //       stores.insert(assign);
-  //       cout << "haha" << endl;
-  //     }
-  //   }
-  // }
+  for (BasicBlock::const_iterator it = block.begin(); it != block.end(); ++it) {
+    const Instruction& instr = *it;
+    if (const StoreInst* store = dyn_cast<StoreInst>(&instr)) {
+      const Value* pointer = store->getPointerOperand();
+      Assignment assign(pointer);
+      if (!stores.count(assign)) {
+        stores.insert(assign);
+        store->dump();
+      }
+    }
+  }
   return stores;
 }
 
