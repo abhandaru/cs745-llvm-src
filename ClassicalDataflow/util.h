@@ -34,7 +34,7 @@ class Assignment {
   }
 };
 
-typedef SmallSet<Assignment, 10, std::less<Assignment> > Assignments;
+typedef std::set<Assignment> Assignments;
 
 class BlockState {
  public:
@@ -56,9 +56,11 @@ class DataFlowUtil {
  public:
   static Assignments uses(const BasicBlock& block);
   static Assignments defines(const BasicBlock& block);
+  static Assignments all(const Function& fn);
   static void setSubtract(Assignments& dest, const Assignments& src);
   static void setUnion(Assignments& dest, const Assignments& src);
   static void setIntersect(Assignments& dest, const Assignments& src);
+  static bool setEquals(const Assignments& a, const Assignments& b);
 };
 
 
