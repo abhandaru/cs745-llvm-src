@@ -3,3 +3,4 @@
 *.ll
 .DS_Store
 out
+*.o

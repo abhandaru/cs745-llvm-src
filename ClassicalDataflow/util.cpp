@@ -13,38 +13,31 @@ namespace llvm {
 
 
 Assignments DataFlowUtil::uses(const BasicBlock& block) {
-  cout << "      Uses:" << endl;
-  Assignments loads;
+  Assignments useSet;
   for (BasicBlock::const_iterator it = block.begin(); it != block.end(); ++it) {
     const Instruction& instr = *it;
-    if (const LoadInst* load = dyn_cast<LoadInst>(&instr)) {
-      const Value* pointer = load->getPointerOperand();
-      Assignment assign(pointer);
-      if (!loads.count(assign)) {
-        loads.insert(assign);
-        load->dump();
+    const User* user = &instr;
+    User::const_op_iterator OI, OE;
+    for(OI = user->op_begin(), OE = user->op_end(); OI != OE; ++OI) {
+      Value* val = *OI;
+      // check if the operand is used
+      if (isa<Instruction>(val) || isa<Argument>(val)) {
+        useSet.insert(Assignment(val));
       }
     }
   }
-  return loads;
+  return useSet;
 }
 
 
 Assignments DataFlowUtil::defines(const BasicBlock& block) {
-  cout << "      Defines:" << endl;
-  Assignments stores;
+  Assignments defSet;
   for (BasicBlock::const_iterator it = block.begin(); it != block.end(); ++it) {
     const Instruction& instr = *it;
-    if (const StoreInst* store = dyn_cast<StoreInst>(&instr)) {
-      const Value* pointer = store->getPointerOperand();
-      Assignment assign(pointer);
-      if (!stores.count(assign)) {
-        stores.insert(assign);
-        store->dump();
-      }
-    }
+    const Value* val = &instr;
+    defSet.insert(Assignment(val));
   }
-  return stores;
+  return defSet;
 }
 
 
