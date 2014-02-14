@@ -14,7 +14,7 @@ namespace llvm {
 
 // TODO: Call DataFlowPass with the right arguments
 ReachingDefinitions::ReachingDefinitions() :
-    DataFlowPass(ID, ALL, INTERSECTION, FORWARDS) {
+    DataFlowPass(ID, NONE, UNION, FORWARDS) {
   cout << ">> Reaching() constructor" << endl;
 };
 

@@ -42,12 +42,13 @@ Assignments DataFlowUtil::defines(const BasicBlock& block) {
   return defSet;
 }
 
+
 Assignments DataFlowUtil::kills(const BasicBlock& block) {
   Assignments killSet;
   const Function& function = *block.getParent();
   for (BasicBlock::const_iterator it = block.begin(); it != block.end(); ++it) {
     const Instruction& inst = *it;
-    
+
     for(Function::const_iterator itrF = function.begin(); itrF != function.end(); ++itrF) {
       const BasicBlock& bb = *itrF;
       if (&bb == &block)
@@ -128,6 +129,16 @@ bool DataFlowUtil::setEquals(const Assignments& a, const Assignments& b) {
     }
   }
   return true;
+}
+
+
+void DataFlowUtil::print(const Assignments& assignments) {
+  cout << "{ ";
+  for (Assignments::const_iterator I = assignments.begin(),
+      IE = assignments.end(); I != IE; ++I) {
+    cout << (*I).pointer->getName().data() << " ";
+  }
+  cout << "}";
 }
 
 

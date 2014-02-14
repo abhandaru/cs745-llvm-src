@@ -47,7 +47,6 @@ void DataFlowPass::traverseForwards(const Function& fn, BlockStates& states) {
   while (!worklist.empty()) {
     // inspect 1st element
     const BasicBlock* current = worklist.front();
-    cout << "    Block: " << current->getName().data() << endl;
     worklist.pop();
 
     // determine the meet of all successors
@@ -60,20 +59,7 @@ void DataFlowPass::traverseForwards(const Function& fn, BlockStates& states) {
 
     // see if we need to inspect this node
     BlockState& state = states[current];
-
-    cout << "      meet: { ";
-    for (Assignments::const_iterator i = meet.begin(); i != meet.end(); ++i) {
-      cout << (*i).pointer->getName().data() << " ";
-    }
-    cout << "}" << endl;
-    cout << "      in: { ";
-    for (Assignments::const_iterator i = state.in.begin(); i != state.in.end(); ++i) {
-      cout << (*i).pointer->getName().data() << " ";
-    }
-    cout << "}" << endl;
-
     if (visited.count(current) && DataFlowUtil::setEquals(state.in, meet)) {
-      cout << "      <input unchanged>" << endl;
       continue;
     }
 
@@ -82,32 +68,11 @@ void DataFlowPass::traverseForwards(const Function& fn, BlockStates& states) {
     visited.insert(current);
     transferFunction(state.generates, state.kills, state.in, state.out);
 
-    //
-    // Debug prints
-    //
-    cout << "      out: { ";
-    for (Assignments::const_iterator i = state.out.begin(); i != state.out.end(); ++i) {
-      cout << (*i).pointer->getName().data() << " ";
-    }
-    cout << "}" << endl;
-
-    //
     // Add all predecessors to the worklist.
-    //
     for (succ_const_iterator I = succ_begin(current), IE = succ_end(current);
         I != IE; ++I) {
       worklist.push(*I);
     }
-
-    // print out the worklist queue
-    cout << "      queue: { ";
-    for (int i = 0; i < worklist.size(); ++i) {
-      const BasicBlock* el = worklist.front();
-      cout << el->getName().data() << " ";
-      worklist.pop();
-      worklist.push(el);
-    }
-    cout << "}" << endl;
   }
 }
 
@@ -127,7 +92,6 @@ void DataFlowPass::traverseBackwards(const Function& fn, BlockStates& states) {
   while (!worklist.empty()) {
     // inspect 1st element
     const BasicBlock* current = worklist.front();
-    cout << "    Block: " << current->getName().data() << endl;
     worklist.pop();
 
     // determine the meet of all successors
@@ -140,24 +104,8 @@ void DataFlowPass::traverseBackwards(const Function& fn, BlockStates& states) {
 
     // See if we need to inspect this node.
     BlockState& state = states[current];
-
-    cout << "      meet: { ";
-    for (Assignments::const_iterator i = meet.begin(); i != meet.end(); ++i) {
-      cout << (*i).pointer->getName().data() << " ";
-    }
-    cout << "}" << endl;
-    cout << "      out: { ";
-    for (Assignments::const_iterator i = state.out.begin(); i != state.out.end(); ++i) {
-      cout << (*i).pointer->getName().data() << " ";
-    }
-    cout << "}" << endl;
-
     if (visited.count(current) && DataFlowUtil::setEquals(state.in, meet)) {
-      cout << "      <input unchanged>" << endl;
-      continue;
-    }
-
-    if (visited.count(current) && DataFlowUtil::setEquals(state.out, meet)) {
+      // cout << "      <input unchanged>" << endl;
       continue;
     }
 
@@ -166,27 +114,11 @@ void DataFlowPass::traverseBackwards(const Function& fn, BlockStates& states) {
     visited.insert(current);
     transferFunction(state.generates, state.kills, state.out, state.in);
 
-    cout << "      in: { ";
-    for (Assignments::const_iterator i = state.in.begin(); i != state.in.end(); ++i) {
-      cout << (*i).pointer->getName().data() << " ";
-    }
-    cout << "}" << endl;
-
     // Add all predecessors to the worklist.
     for (const_pred_iterator I = pred_begin(current), IE = pred_end(current);
         I != IE; ++I) {
       worklist.push(*I);
     }
-
-    // print out the worklist queue
-    cout << "      queue: { ";
-    for (int i = 0; i < worklist.size(); ++i) {
-      const BasicBlock* el = worklist.front();
-      cout << el->getName().data() << " ";
-      worklist.pop();
-      worklist.push(el);
-    }
-    cout << "}" << endl;
   }
 }
 
@@ -217,9 +149,24 @@ Assignments DataFlowPass::getTop(const Function& fn) {
 }
 
 
-bool DataFlowPass::runOnFunction(Function& fn) {
-  cout << "  Function: " << fn.getName().data() << endl;
+void DataFlowPass::display(const Function& fn, BlockStates& states) {
+  cout << "Function: " << fn.getName().data() << endl << endl;
+  for (Function::const_iterator I = fn.begin(), IE = fn.end(); I != IE; ++I) {
+    const BasicBlock* block = &(*I);
+    BlockState& state = states[block];
+    if (I == fn.begin()) {
+      DataFlowUtil::print(state.in);
+      cout << endl;
+    }
+    block->dump();
+    DataFlowUtil::print(state.out);
+    cout << endl;
+  }
+  cout << endl;
+}
 
+
+bool DataFlowPass::runOnFunction(Function& fn) {
   // First pass: precompute generate and kill sets.
   BlockStates states;
   computeGenKill(fn, states);
@@ -235,7 +182,7 @@ bool DataFlowPass::runOnFunction(Function& fn) {
   }
 
   // Does not modify the incoming Function.
-  cout << endl;
+  display(fn, states);
   return false;
 }
 

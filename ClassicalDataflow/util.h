@@ -62,6 +62,7 @@ class DataFlowUtil {
   static void setUnion(Assignments& dest, const Assignments& src);
   static void setIntersect(Assignments& dest, const Assignments& src);
   static bool setEquals(const Assignments& a, const Assignments& b);
+  static void print(const Assignments& assignments);
 };
 
 

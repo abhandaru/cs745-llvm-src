@@ -51,6 +51,7 @@ class DataFlowPass : public FunctionPass {
     const Assignments& input, Assignments& output);
   void meetFunction(const Assignments& in, Assignments& out);
   Assignments getTop(const Function& fn);
+  void display(const Function& fn, BlockStates& states);
   // data flow API
   virtual Assignments generate(const BasicBlock& block) = 0;
   virtual Assignments kill(const BasicBlock& block) = 0;
