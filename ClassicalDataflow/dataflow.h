@@ -42,9 +42,9 @@ enum Top {
 class DataFlowPass : public FunctionPass {
  public:
   DataFlowPass(char id, Top top, Meet meet, Direction direction);
-  void ExampleFunctionPrinter(raw_ostream& O, const Function& F);
+  void meetFunction(const Assignments& in, Assignments& out);
   void transferFunction(const Assignments& generate, const Assignments& kill,
-    Assignments& input, Assignments& output);
+    const Assignments& input, Assignments& output);
   virtual Assignments generate(const BasicBlock& block) = 0;
   virtual Assignments kill(const BasicBlock& block) = 0;
   // pass API
@@ -55,9 +55,6 @@ class DataFlowPass : public FunctionPass {
   const Top _top;
   const Meet _meet;
   const Direction _direction;
-
- private:
-  void PrintInstructionOps(raw_ostream& O, const Instruction* I);
 };
 
 

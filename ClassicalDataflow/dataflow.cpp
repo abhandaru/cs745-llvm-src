@@ -22,19 +22,23 @@ DataFlowPass::DataFlowPass(char id, Top top, Meet meet, Direction direction) :
 
 
 void DataFlowPass::transferFunction(const Assignments& generate,
-    const Assignments& kill, Assignments& input, Assignments& output) {
+    const Assignments& kill, const Assignments& input, Assignments& output) {
   output = input;
   DataFlowUtil::setSubtract(output, kill);
+  meetFunction(generate, output);
+}
+
+
+void DataFlowPass::meetFunction(const Assignments& in, Assignments& out) {
   if (_meet == UNION) {
-    DataFlowUtil::setUnion(output, generate);
+    DataFlowUtil::setUnion(out, in);
   } else if (_meet == INTERSECTION) {
-    DataFlowUtil::setIntersect(output, generate);
+    DataFlowUtil::setIntersect(out, in);
   }
 }
 
 
 bool DataFlowPass::runOnFunction(Function& fn) {
-  // ExampleFunctionPrinter(errs(), fn);
   cout << "  Function: " << fn.getName().data() << endl;
 
   // First pass: precompute generate and kill sets.
@@ -67,21 +71,72 @@ bool DataFlowPass::runOnFunction(Function& fn) {
     worklist.push(&start);
 
     while (!worklist.empty()) {
+
       // inspect 1st element
       const BasicBlock* current = worklist.front();
-      BlockState& state = states[current];
       cout << "    Block: " << current->getName().data() << endl;
       worklist.pop();
 
+      // determine the meet of all successors
+      // TODO: Set to correct TOP.
+      bool hasSuccessor = false;
+      Assignments meet;
+      for (succ_const_iterator I = succ_begin(current), IE = succ_end(current);
+          I != IE; ++I) {
+        hasSuccessor = true;
+        BlockState& succ_state = states[*I];
+        meetFunction(succ_state.in, meet);
+      }
 
+      // see if we need to inspect this node
+      BlockState& state = states[current];
 
+      cout << "      meet: { ";
+      for (Assignments::const_iterator i = meet.begin(); i != meet.end(); ++i) {
+        cout << (*i).pointer->getName().data() << " ";
+      }
+      cout << "}" << endl;
+      cout << "      out: { ";
+      for (Assignments::const_iterator i = state.out.begin(); i != state.out.end(); ++i) {
+        cout << (*i).pointer->getName().data() << " ";
+      }
+      cout << "}" << endl;
+
+      if (hasSuccessor && DataFlowUtil::setEquals(state.out, meet)) {
+        cout << "      <input unchanged>" << endl;
+        continue;
+      }
+
+      // perform transfer function
+      state.out = meet;
+      transferFunction(state.generates, state.kills, state.out, state.in);
+
+      //
+      // Debug prints
+      //
+      cout << "      in: { ";
+      for (Assignments::const_iterator i = state.in.begin(); i != state.in.end(); ++i) {
+        cout << (*i).pointer->getName().data() << " ";
+      }
+      cout << "}" << endl;
+
+      //
+      //
+      //
       for (const_pred_iterator I = pred_begin(current), IE = pred_end(current);
           I != IE; ++I) {
-        const BasicBlock* predecessor = *I;
-
-
-
+        worklist.push(*I);
       }
+
+      // more debug shit
+      cout << "      queue: { ";
+      for (int i = 0; i < worklist.size(); ++i) {
+        const BasicBlock* el = worklist.front();
+        cout << el->getName().data() << " ";
+        worklist.pop();
+        worklist.push(el);
+      }
+      cout << "}" << endl;
     }
   }
 
@@ -93,35 +148,6 @@ bool DataFlowPass::runOnFunction(Function& fn) {
 
 void DataFlowPass::getAnalysisUsage(AnalysisUsage& AU) const {
   AU.setPreservesCFG();
-}
-
-
-void DataFlowPass::ExampleFunctionPrinter(raw_ostream& O, const Function& F) {
-  for (Function::const_iterator FI = F.begin(), FE = F.end(); FI != FE; ++FI) {
-    const BasicBlock* block = FI;
-    O << block->getName() << ":\n";
-    const Value* blockValue = block;
-    PrintInstructionOps(O, NULL);
-    for (BasicBlock::const_iterator BI = block->begin(), BE = block->end();
-        BI != BE; ++BI) {
-      BI->print(O);
-      PrintInstructionOps(O, &(*BI));
-    }
-  }
-}
-
-
-void DataFlowPass::PrintInstructionOps(raw_ostream& O, const Instruction* I) {
-  O << "\nOps: {";
-  if (I != NULL) {
-    for (Instruction::const_op_iterator OI = I->op_begin(), OE = I->op_end();
-        OI != OE; ++OI) {
-      const Value* v = OI->get();
-      v->print(O);
-      O << ";";
-    }
-  }
-  O << "}\n";
 }
 
 

@@ -18,13 +18,11 @@ Liveness::Liveness() : DataFlowPass(ID, NONE, UNION, BACKWARDS) {
 
 
 Assignments Liveness::generate(const BasicBlock& block) {
-  // TODO: This is just an example.
   return DataFlowUtil::uses(block);
 }
 
 
 Assignments Liveness::kill(const BasicBlock& block) {
-  // TODO: This is just an example.
   return DataFlowUtil::defines(block);
 }
 
