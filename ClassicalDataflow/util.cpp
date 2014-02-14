@@ -17,6 +17,7 @@ Assignments DataFlowUtil::uses(const BasicBlock& block) {
   for (BasicBlock::const_iterator it = block.begin(); it != block.end(); ++it) {
     const Instruction& instr = *it;
     const User* user = &instr;
+    // iterate through all operands
     User::const_op_iterator OI, OE;
     for(OI = user->op_begin(), OE = user->op_end(); OI != OE; ++OI) {
       Value* val = *OI;
@@ -33,11 +34,23 @@ Assignments DataFlowUtil::uses(const BasicBlock& block) {
 Assignments DataFlowUtil::defines(const BasicBlock& block) {
   Assignments defSet;
   for (BasicBlock::const_iterator it = block.begin(); it != block.end(); ++it) {
+    // there's no result area for an instr, every instruction is actually a definition
     const Instruction& instr = *it;
     const Value* val = &instr;
     defSet.insert(Assignment(val));
   }
   return defSet;
+}
+
+Assignments DataFlowUtil::kills(const BasicBlock& block) {
+  Assignments killSet;
+  const Function* function = block.getParent();
+  for (BasicBlock::const_iterator it = block.begin(); it != block.end(); ++it) {
+    const Instruction& instr = *it;
+    const Value* val = &instr;
+    killSet.insert(Assignment(val));
+  }
+  return killSet;
 }
 
 

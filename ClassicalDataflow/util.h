@@ -56,6 +56,7 @@ class DataFlowUtil {
  public:
   static Assignments uses(const BasicBlock& block);
   static Assignments defines(const BasicBlock& block);
+  static Assignments kills(const BasicBlock& block);
   static Assignments all(const Function& fn);
   static void setSubtract(Assignments& dest, const Assignments& src);
   static void setUnion(Assignments& dest, const Assignments& src);
