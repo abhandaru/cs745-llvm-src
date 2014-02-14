@@ -2,5 +2,5 @@
 *.bc
 *.ll
 .DS_Store
-out
 *.o
+out
