@@ -22,6 +22,8 @@ class ReachingDefinitions : public DataFlowPass {
   ReachingDefinitions();
   Assignments generate(const BasicBlock& block);
   Assignments kill(const BasicBlock& block);
+  void transferFn(const Assignments& generate, const Assignments& kill,
+    const Assignments& input, Assignments& output);
 };
 
 

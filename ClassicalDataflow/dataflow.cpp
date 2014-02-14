@@ -66,7 +66,7 @@ void DataFlowPass::traverseForwards(const Function& fn, BlockStates& states) {
     // perform transfer function
     state.in = meet;
     visited.insert(current);
-    transferFunction(state.generates, state.kills, state.in, state.out);
+    transferFn(state.generates, state.kills, state.in, state.out);
 
     // Add all predecessors to the worklist.
     for (succ_const_iterator I = succ_begin(current), IE = succ_end(current);
@@ -112,7 +112,7 @@ void DataFlowPass::traverseBackwards(const Function& fn, BlockStates& states) {
     // Perform transfer function.
     state.out = meet;
     visited.insert(current);
-    transferFunction(state.generates, state.kills, state.out, state.in);
+    transferFn(state.generates, state.kills, state.out, state.in);
 
     // Add all predecessors to the worklist.
     for (const_pred_iterator I = pred_begin(current), IE = pred_end(current);
@@ -123,7 +123,7 @@ void DataFlowPass::traverseBackwards(const Function& fn, BlockStates& states) {
 }
 
 
-void DataFlowPass::transferFunction(const Assignments& generate,
+void DataFlowPass::transferFn(const Assignments& generate,
     const Assignments& kill, const Assignments& input, Assignments& output) {
   output = input;
   DataFlowUtil::setSubtract(output, kill);

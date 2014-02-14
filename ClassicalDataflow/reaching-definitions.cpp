@@ -12,7 +12,6 @@ using std::endl;
 namespace llvm {
 
 
-// TODO: Call DataFlowPass with the right arguments
 ReachingDefinitions::ReachingDefinitions() :
     DataFlowPass(ID, NONE, UNION, FORWARDS) {
   cout << ">> Reaching() constructor" << endl;
@@ -24,8 +23,15 @@ Assignments ReachingDefinitions::generate(const BasicBlock& block) {
 
 
 Assignments ReachingDefinitions::kill(const BasicBlock& block) {
-  // TODO: Is this correct?
   return DataFlowUtil::kills(block);
+}
+
+
+void ReachingDefinitions::transferFn(const Assignments& generate,
+    const Assignments& kill, const Assignments& input, Assignments& output) {
+  output = input;
+  DataFlowUtil::setSubtract(output, kill);
+  meetFunction(generate, output);
 }
 
 

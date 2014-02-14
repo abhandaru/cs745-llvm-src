@@ -47,14 +47,14 @@ class DataFlowPass : public FunctionPass {
   void computeGenKill(const Function& fn, BlockStates& states);
   void traverseForwards(const Function& fn, BlockStates& states);
   void traverseBackwards(const Function& fn, BlockStates& states);
-  void transferFunction(const Assignments& generate, const Assignments& kill,
-    const Assignments& input, Assignments& output);
   void meetFunction(const Assignments& in, Assignments& out);
   Assignments getTop(const Function& fn);
   void display(const Function& fn, BlockStates& states);
   // data flow API
   virtual Assignments generate(const BasicBlock& block) = 0;
   virtual Assignments kill(const BasicBlock& block) = 0;
+  virtual void transferFn(const Assignments& generate, const Assignments& kill,
+      const Assignments& input, Assignments& output) = 0;
   // pass API
   virtual bool runOnFunction(Function& F);
   virtual void getAnalysisUsage(AnalysisUsage& AU) const;

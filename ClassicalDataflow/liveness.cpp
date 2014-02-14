@@ -27,6 +27,14 @@ Assignments Liveness::kill(const BasicBlock& block) {
 }
 
 
+void Liveness::transferFn(const Assignments& generate,
+    const Assignments& kill, const Assignments& input, Assignments& output) {
+  output = input;
+  DataFlowUtil::setSubtract(output, kill);
+  meetFunction(generate, output);
+}
+
+
 char Liveness::ID = 0;
 RegisterPass<Liveness> X("live", "15745 Liveness");
 
