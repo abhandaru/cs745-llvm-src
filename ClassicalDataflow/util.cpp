@@ -14,7 +14,7 @@ namespace llvm {
 
 Assignments DataFlowUtil::uses(const BasicBlock& block) {
   Assignments useSet;
-  for (BasicBlock::const_iterator it = block.begin(); it != block.end(); ++it) {
+  for (BasicBlock::const_reverse_iterator it = block.rbegin(); it != block.rend(); ++it) {
     const Instruction& instr = *it;
     const User* user = &instr;
     // iterate through all operands
@@ -26,6 +26,7 @@ Assignments DataFlowUtil::uses(const BasicBlock& block) {
         useSet.insert(Assignment(val));
       }
     }
+    useSet.erase(Assignment(&instr));
   }
   return useSet;
 }
@@ -36,19 +37,26 @@ Assignments DataFlowUtil::defines(const BasicBlock& block) {
   for (BasicBlock::const_iterator it = block.begin(); it != block.end(); ++it) {
     // there's no result area for an instr, every instruction is actually a definition
     const Instruction& instr = *it;
-    const Value* val = &instr;
-    defSet.insert(Assignment(val));
+    defSet.insert(Assignment(&instr));
   }
   return defSet;
 }
 
 Assignments DataFlowUtil::kills(const BasicBlock& block) {
   Assignments killSet;
-  const Function* function = block.getParent();
+  const Function& function = *block.getParent();
   for (BasicBlock::const_iterator it = block.begin(); it != block.end(); ++it) {
-    const Instruction& instr = *it;
-    const Value* val = &instr;
-    killSet.insert(Assignment(val));
+    const Instruction& inst = *it;
+    
+    for(Function::const_iterator itrF = function.begin(); itrF != function.end(); ++itrF) {
+      const BasicBlock& bb = *itrF;
+      if (&bb == &block)
+        for(BasicBlock::const_iterator itrB = bb.begin(); itrB != bb.end(); ++itrB) {
+          const Instruction& instr = *itrB;
+          if (&inst == &instr)
+            killSet.insert(Assignment(&instr));
+        }
+    }
   }
   return killSet;
 }
