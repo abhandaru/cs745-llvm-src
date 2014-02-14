@@ -4,7 +4,6 @@
 
 #include "dataflow.h"
 
-
 using std::cout;
 using std::endl;
 
@@ -244,6 +243,5 @@ bool DataFlowPass::runOnFunction(Function& fn) {
 void DataFlowPass::getAnalysisUsage(AnalysisUsage& AU) const {
   AU.setPreservesCFG();
 }
-
 
 }

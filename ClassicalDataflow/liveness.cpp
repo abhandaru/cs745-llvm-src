@@ -30,5 +30,4 @@ Assignments Liveness::kill(const BasicBlock& block) {
 char Liveness::ID = 0;
 RegisterPass<Liveness> X("live", "15745 Liveness");
 
-
 }
