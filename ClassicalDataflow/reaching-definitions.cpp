@@ -14,16 +14,17 @@ namespace llvm {
 
 // TODO: Call DataFlowPass with the right arguments
 ReachingDefinitions::ReachingDefinitions() :
-    DataFlowPass(ID, NONE, INTERSECTION, FORWARDS) {
-  cout << ">> Liveness() constructor" << endl;
+    DataFlowPass(ID, ALL, INTERSECTION, FORWARDS) {
+  cout << ">> Reaching() constructor" << endl;
 };
 
 Assignments ReachingDefinitions::generate(const BasicBlock& block) {
-  return DataFlowUtil::uses(block);
+  return DataFlowUtil::defines(block);
 }
 
 
 Assignments ReachingDefinitions::kill(const BasicBlock& block) {
+  // TODO: Is this correct?
   return DataFlowUtil::defines(block);
 }
 

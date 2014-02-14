@@ -33,15 +33,15 @@ void DataFlowPass::computeGenKill(const Function& fn, BlockStates& states) {
 }
 
 
-void DataFlowPass::traverseBackwards(const Function& fn, BlockStates& states) {
+void DataFlowPass::traverseForwards(const Function& fn, BlockStates& states) {
+  std::queue<const BasicBlock*> worklist;
+  std::set<const BasicBlock*> visited;
+
   // Set up initial conditions.
   Assignments top = getTop(fn);
-  const BasicBlock* start = &(fn.back());
+  const BasicBlock* start = &(fn.front());
   BlockState& start_state = states[start];
   start_state.out = top;
-
-  // Start at the back and traverse inverse graph.
-  std::queue<const BasicBlock*> worklist;
   worklist.push(start);
 
   // Process queue until it is empty.
@@ -52,16 +52,94 @@ void DataFlowPass::traverseBackwards(const Function& fn, BlockStates& states) {
     worklist.pop();
 
     // determine the meet of all successors
-    bool hasSuccessor = false;
+    Assignments meet = top;
+    for (const_pred_iterator I = pred_begin(current), IE = pred_end(current);
+        I != IE; ++I) {
+      BlockState& pred_state = states[*I];
+      meetFunction(pred_state.out, meet);
+    }
+
+    // see if we need to inspect this node
+    BlockState& state = states[current];
+
+    cout << "      meet: { ";
+    for (Assignments::const_iterator i = meet.begin(); i != meet.end(); ++i) {
+      cout << (*i).pointer->getName().data() << " ";
+    }
+    cout << "}" << endl;
+    cout << "      in: { ";
+    for (Assignments::const_iterator i = state.in.begin(); i != state.in.end(); ++i) {
+      cout << (*i).pointer->getName().data() << " ";
+    }
+    cout << "}" << endl;
+
+    if (visited.count(current) && DataFlowUtil::setEquals(state.in, meet)) {
+      cout << "      <input unchanged>" << endl;
+      continue;
+    }
+
+    // perform transfer function
+    state.in = meet;
+    visited.insert(current);
+    transferFunction(state.generates, state.kills, state.in, state.out);
+
+    //
+    // Debug prints
+    //
+    cout << "      out: { ";
+    for (Assignments::const_iterator i = state.out.begin(); i != state.out.end(); ++i) {
+      cout << (*i).pointer->getName().data() << " ";
+    }
+    cout << "}" << endl;
+
+    //
+    // Add all predecessors to the worklist.
+    //
+    for (succ_const_iterator I = succ_begin(current), IE = succ_end(current);
+        I != IE; ++I) {
+      worklist.push(*I);
+    }
+
+    // print out the worklist queue
+    cout << "      queue: { ";
+    for (int i = 0; i < worklist.size(); ++i) {
+      const BasicBlock* el = worklist.front();
+      cout << el->getName().data() << " ";
+      worklist.pop();
+      worklist.push(el);
+    }
+    cout << "}" << endl;
+  }
+}
+
+
+void DataFlowPass::traverseBackwards(const Function& fn, BlockStates& states) {
+  std::queue<const BasicBlock*> worklist;
+  std::set<const BasicBlock*> visited;
+
+  // Set up initial conditions.
+  Assignments top = getTop(fn);
+  const BasicBlock* start = &(fn.back());
+  BlockState& start_state = states[start];
+  start_state.out = top;
+  worklist.push(start);
+
+  // Process queue until it is empty.
+  while (!worklist.empty()) {
+    // inspect 1st element
+    const BasicBlock* current = worklist.front();
+    cout << "    Block: " << current->getName().data() << endl;
+    worklist.pop();
+
+    // determine the meet of all successors
     Assignments meet = top;
     for (succ_const_iterator I = succ_begin(current), IE = succ_end(current);
         I != IE; ++I) {
-      hasSuccessor = true;
       BlockState& succ_state = states[*I];
       meetFunction(succ_state.in, meet);
     }
 
-    // see if we need to inspect this node
+    // See if we need to inspect this node.
     BlockState& state = states[current];
 
     cout << "      meet: { ";
@@ -75,27 +153,27 @@ void DataFlowPass::traverseBackwards(const Function& fn, BlockStates& states) {
     }
     cout << "}" << endl;
 
-    if (hasSuccessor && DataFlowUtil::setEquals(state.out, meet)) {
+    if (visited.count(current) && DataFlowUtil::setEquals(state.in, meet)) {
       cout << "      <input unchanged>" << endl;
       continue;
     }
 
-    // perform transfer function
+    if (visited.count(current) && DataFlowUtil::setEquals(state.out, meet)) {
+      continue;
+    }
+
+    // Perform transfer function.
     state.out = meet;
+    visited.insert(current);
     transferFunction(state.generates, state.kills, state.out, state.in);
 
-    //
-    // Debug prints
-    //
     cout << "      in: { ";
     for (Assignments::const_iterator i = state.in.begin(); i != state.in.end(); ++i) {
       cout << (*i).pointer->getName().data() << " ";
     }
     cout << "}" << endl;
 
-    //
     // Add all predecessors to the worklist.
-    //
     for (const_pred_iterator I = pred_begin(current), IE = pred_end(current);
         I != IE; ++I) {
       worklist.push(*I);
@@ -150,7 +228,7 @@ bool DataFlowPass::runOnFunction(Function& fn) {
 
   // iterate for a forwards pass
   if (_direction == FORWARDS) {
-    const BasicBlock& start = fn.front();
+    traverseForwards(fn, states);
 
   // iterate for a backwards pass
   } else if (_direction == BACKWARDS) {

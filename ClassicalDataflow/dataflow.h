@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <queue>
+#include <set>
 
 #include "llvm/IR/Instructions.h"
 #include "llvm/ADT/BitVector.h"
@@ -43,11 +44,12 @@ class DataFlowPass : public FunctionPass {
  public:
   DataFlowPass(char id, Top top, Meet meet, Direction direction);
   void computeGenKill(const Function& fn, BlockStates& states);
+  void traverseForwards(const Function& fn, BlockStates& states);
   void traverseBackwards(const Function& fn, BlockStates& states);
-  Assignments getTop(const Function& fn);
-  void meetFunction(const Assignments& in, Assignments& out);
   void transferFunction(const Assignments& generate, const Assignments& kill,
     const Assignments& input, Assignments& output);
+  void meetFunction(const Assignments& in, Assignments& out);
+  Assignments getTop(const Function& fn);
   // data flow API
   virtual Assignments generate(const BasicBlock& block) = 0;
   virtual Assignments kill(const BasicBlock& block) = 0;
