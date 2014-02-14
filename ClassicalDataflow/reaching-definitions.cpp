@@ -25,7 +25,7 @@ Assignments ReachingDefinitions::generate(const BasicBlock& block) {
 
 Assignments ReachingDefinitions::kill(const BasicBlock& block) {
   // TODO: Is this correct?
-  return DataFlowUtil::defines(block);
+  return DataFlowUtil::kills(block);
 }
 
 

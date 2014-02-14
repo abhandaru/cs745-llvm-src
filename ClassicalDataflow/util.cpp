@@ -51,12 +51,14 @@ Assignments DataFlowUtil::kills(const BasicBlock& block) {
 
     for(Function::const_iterator itrF = function.begin(); itrF != function.end(); ++itrF) {
       const BasicBlock& bb = *itrF;
-      if (&bb == &block)
+      if (&bb == &block) {
         for(BasicBlock::const_iterator itrB = bb.begin(); itrB != bb.end(); ++itrB) {
           const Instruction& instr = *itrB;
-          if (&inst == &instr)
+          if (&inst == &instr) {
             killSet.insert(Assignment(&instr));
+          }
         }
+      }
     }
   }
   return killSet;
