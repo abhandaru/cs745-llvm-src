@@ -48,6 +48,32 @@ Assignments DataFlowUtil::defines(const BasicBlock& block) {
 }
 
 
+Assignments DataFlowUtil::all(const Function& fn) {
+  Assignments all;
+
+  // Function arguments are values too.
+  for (Function::const_arg_iterator I = fn.arg_begin(), IE = fn.arg_end();
+      I != IE; ++I) {
+    const Argument* arg = &(*I);
+    Assignment assign(arg);
+    all.insert(assign);
+  }
+
+  // Populate with all instructions.
+  // TODO: What do we do with loads and stores?
+  for (Function::const_iterator I = fn.begin(), IE = fn.end(); I != IE; ++I) {
+    const BasicBlock& block = *I;
+    for (BasicBlock::const_iterator J = block.begin(), JE = block.end();
+        J != JE; ++J) {
+      const Instruction* instr = &(*J);
+      Assignment assign(instr);
+      all.insert(assign);
+    }
+  }
+  return all;
+}
+
+
 void DataFlowUtil::setSubtract(Assignments& dest, const Assignments& src) {
   for (Assignments::const_iterator i = src.begin(); i != src.end(); ++i) {
     const Assignment& sub = *i;
