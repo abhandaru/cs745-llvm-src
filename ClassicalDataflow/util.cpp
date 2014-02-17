@@ -1,6 +1,11 @@
 // 15-745 S14 Assignment 2: util.cpp
 // Group: akbhanda, zheq
+//
+// Overview: This file contains useful typedefs and utility functions for the
+//   the DataFlowPass class and its subclasses. The DataFlowUtil class is
+//   completely stateless.
 ///////////////////////////////////////////////////////////////////////////////
+
 
 #include "util.h"
 
@@ -12,6 +17,9 @@ using std::endl;
 namespace llvm {
 
 
+//
+// For a given BasicBlock, compute which variables are used.
+//
 Assignments DataFlowUtil::uses(const BasicBlock& block) {
   Assignments useSet;
   for (BasicBlock::const_reverse_iterator it = block.rbegin(); it != block.rend(); ++it) {
@@ -32,6 +40,9 @@ Assignments DataFlowUtil::uses(const BasicBlock& block) {
 }
 
 
+//
+// For a given BasicBlock, compute which variables are defined.
+//
 Assignments DataFlowUtil::defines(const BasicBlock& block) {
   Assignments defSet;
   for (BasicBlock::const_iterator it = block.begin(); it != block.end(); ++it) {
@@ -77,7 +88,7 @@ Assignments DataFlowUtil::all(const Function& fn) {
   }
 
   // Populate with all instructions.
-  // TODO: What do we do with loads and stores?
+  // TODO: What do we do with loads and stores? Treat the same for now.
   for (Function::const_iterator I = fn.begin(), IE = fn.end(); I != IE; ++I) {
     const BasicBlock& block = *I;
     for (BasicBlock::const_iterator J = block.begin(), JE = block.end();
@@ -91,6 +102,13 @@ Assignments DataFlowUtil::all(const Function& fn) {
 }
 
 
+//
+// The following functions perform basic set operations in O(n*log(m)) time,
+// where m and n are the sizes of the sets. For our purposes, this is fast
+// enough.
+//
+// The result of these operations is stored back into the 1st argument.
+//
 void DataFlowUtil::setSubtract(Assignments& dest, const Assignments& src) {
   for (Assignments::const_iterator i = src.begin(); i != src.end(); ++i) {
     const Assignment& sub = *i;
@@ -117,6 +135,9 @@ void DataFlowUtil::setIntersect(Assignments& dest, const Assignments& src) {
 }
 
 
+//
+// Determine if 2 sets contain the same elements.
+//
 bool DataFlowUtil::setEquals(const Assignments& a, const Assignments& b) {
   // make sure sets are the same length
   if (a.size() != b.size()) {
@@ -134,6 +155,11 @@ bool DataFlowUtil::setEquals(const Assignments& a, const Assignments& b) {
 }
 
 
+//
+// Helper/debug function to quickly print out a set of assignments.
+// Later if we change how we implement assignment sets, we will have to update
+// this function.
+//
 void DataFlowUtil::print(const Assignments& assignments) {
   cout << "{ ";
   for (Assignments::const_iterator I = assignments.begin(),

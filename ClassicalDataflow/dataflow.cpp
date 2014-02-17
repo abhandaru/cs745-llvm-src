@@ -11,15 +11,22 @@ using std::endl;
 namespace llvm {
 
 
+//
+// Subclasses must call this constructor during construction.
+// This constructor calls the FunctionPass constructor (it extends that class).
+// Use initializer listed to assign constants on instantiation.
+//
 DataFlowPass::DataFlowPass(char id, Top top, Meet meet, Direction direction) :
     FunctionPass(id),
     _top(top),
     _meet(meet),
-    _direction(direction) {
-  cout << ">> DataFlowPass() constructor" << endl;
-};
+    _direction(direction) { };
 
 
+//
+// Compute the generate and kill sets for each basic block in the given
+// function. The generate and kill functions are overriden by the subclass.
+//
 void DataFlowPass::computeGenKill(const Function& fn, BlockStates& states) {
   for (Function::const_iterator FI = fn.begin(), FE = fn.end(); FI != FE; ++FI) {
     const BasicBlock& block = *FI;
@@ -32,6 +39,10 @@ void DataFlowPass::computeGenKill(const Function& fn, BlockStates& states) {
 }
 
 
+//
+// Do a forwards traversal on the Control Flow Graph to perform the given
+// analysis. The BlockState map is updated during the traversal.
+//
 void DataFlowPass::traverseForwards(const Function& fn, BlockStates& states) {
   std::queue<const BasicBlock*> worklist;
   std::set<const BasicBlock*> visited;
@@ -77,6 +88,10 @@ void DataFlowPass::traverseForwards(const Function& fn, BlockStates& states) {
 }
 
 
+//
+// Do a backwards traversal on the Control Flow Graph to perform the given
+// analysis. The BlockState map is updated during the traversal.
+//
 void DataFlowPass::traverseBackwards(const Function& fn, BlockStates& states) {
   std::queue<const BasicBlock*> worklist;
   std::set<const BasicBlock*> visited;
@@ -123,14 +138,10 @@ void DataFlowPass::traverseBackwards(const Function& fn, BlockStates& states) {
 }
 
 
-void DataFlowPass::transferFn(const Assignments& generate,
-    const Assignments& kill, const Assignments& input, Assignments& output) {
-  output = input;
-  DataFlowUtil::setSubtract(output, kill);
-  meetFunction(generate, output);
-}
-
-
+//
+// Performs the correct meet operation on two input sets.
+// The output is stored in the second set. The first set is unmodified.
+//
 void DataFlowPass::meetFunction(const Assignments& in, Assignments& out) {
   if (_meet == UNION) {
     DataFlowUtil::setUnion(out, in);
@@ -140,6 +151,9 @@ void DataFlowPass::meetFunction(const Assignments& in, Assignments& out) {
 }
 
 
+//
+// Returns the correct Top set based on the subclass configuration.
+//
 Assignments DataFlowPass::getTop(const Function& fn) {
   if (_top == ALL) {
     return DataFlowUtil::all(fn);
@@ -149,6 +163,10 @@ Assignments DataFlowPass::getTop(const Function& fn) {
 }
 
 
+//
+// Called after the pass is complete.
+// Show the results of the pass for each program point b/t blocks.
+//
 void DataFlowPass::display(const Function& fn, BlockStates& states) {
   cout << "Function: " << fn.getName().data() << endl << endl;
   for (Function::const_iterator I = fn.begin(), IE = fn.end(); I != IE; ++I) {
@@ -166,6 +184,9 @@ void DataFlowPass::display(const Function& fn, BlockStates& states) {
 }
 
 
+//
+// Called by the FunctionPass API in LLVM.
+//
 bool DataFlowPass::runOnFunction(Function& fn) {
   // First pass: precompute generate and kill sets.
   BlockStates states;
@@ -175,9 +196,10 @@ bool DataFlowPass::runOnFunction(Function& fn) {
   // iterate for a forwards pass
   if (_direction == FORWARDS) {
     traverseForwards(fn, states);
+  }
 
   // iterate for a backwards pass
-  } else if (_direction == BACKWARDS) {
+  else if (_direction == BACKWARDS) {
     traverseBackwards(fn, states);
   }
 

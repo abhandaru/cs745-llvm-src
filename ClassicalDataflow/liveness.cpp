@@ -12,21 +12,30 @@ using std::endl;
 namespace llvm {
 
 
-Liveness::Liveness() : DataFlowPass(ID, NONE, UNION, BACKWARDS) {
-  cout << ">> Liveness() constructor" << endl;
-};
+Liveness::Liveness() : DataFlowPass(ID, NONE, UNION, BACKWARDS) { };
 
 
+//
+// Override generate function of DataFlowPass to use uses().
+//
 Assignments Liveness::generate(const BasicBlock& block) {
   return DataFlowUtil::uses(block);
 }
 
 
+//
+// Override generate function of DataFlowPass to use defines().
+// Notation and naming may change later.
+//
 Assignments Liveness::kill(const BasicBlock& block) {
   return DataFlowUtil::defines(block);
 }
 
 
+//
+// Subclasses override the transfer function.
+// More transparent way to provide function pointers.
+//
 void Liveness::transferFn(const Assignments& generate,
     const Assignments& kill, const Assignments& input, Assignments& output) {
   output = input;
@@ -35,7 +44,11 @@ void Liveness::transferFn(const Assignments& generate,
 }
 
 
+//
+// Do the following to meet the FunctionPass API
+//
 char Liveness::ID = 0;
 RegisterPass<Liveness> X("live", "15745 Liveness");
+
 
 }

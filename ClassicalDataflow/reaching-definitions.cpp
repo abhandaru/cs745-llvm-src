@@ -13,20 +13,30 @@ namespace llvm {
 
 
 ReachingDefinitions::ReachingDefinitions() :
-    DataFlowPass(ID, NONE, UNION, FORWARDS) {
-  cout << ">> Reaching() constructor" << endl;
-};
+    DataFlowPass(ID, NONE, UNION, FORWARDS) { };
 
+
+//
+// Override generate function of DataFlowPass to use defines().
+//
 Assignments ReachingDefinitions::generate(const BasicBlock& block) {
   return DataFlowUtil::defines(block);
 }
 
 
+//
+// Override generate function of DataFlowPass to use kills().
+// Notation and naming may change later.
+//
 Assignments ReachingDefinitions::kill(const BasicBlock& block) {
   return DataFlowUtil::kills(block);
 }
 
 
+//
+// Subclasses override the transfer function.
+// More transparent way to provide function pointers.
+//
 void ReachingDefinitions::transferFn(const Assignments& generate,
     const Assignments& kill, const Assignments& input, Assignments& output) {
   output = input;
@@ -35,6 +45,9 @@ void ReachingDefinitions::transferFn(const Assignments& generate,
 }
 
 
+//
+// Do the following to meet the FunctionPass API
+//
 char ReachingDefinitions::ID = 0;
 RegisterPass<ReachingDefinitions> X("reach", "15745 ReachingDefinitions");
 
