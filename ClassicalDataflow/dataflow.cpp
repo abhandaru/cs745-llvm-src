@@ -34,7 +34,10 @@ void DataFlowPass::computeGenKill(const BlockList& blocks, BlockStates& states) 
     BlockState state;
     state.generates = generate(block);
     state.kills = kill(block);
-    state.out = init(block);
+    if (_direction == FORWARDS)
+      state.out = init(block);
+    else 
+      state.in = init(block);
     // insert into map
     states.insert(BlockStatePair(&block, state));
   }
@@ -105,7 +108,7 @@ void DataFlowPass::traverseBackwards(const BlockList& blocks, BlockStates& state
 
   Assignments topSet = top(*start);
   DataFlowUtil::print(topSet);
-  start_state.out = topSet;
+  start_state.in = topSet;
   worklist.push(start);
 
   // Process queue until it is empty.
