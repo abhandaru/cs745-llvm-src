@@ -8,6 +8,7 @@
 #include <iostream>
 #include <queue>
 #include <set>
+#include <vector>
 
 #include "llvm/IR/Instructions.h"
 #include "llvm/ADT/BitVector.h"
@@ -43,10 +44,12 @@ enum Top {
 
 class DataFlowPass : public FunctionPass {
  public:
-  DataFlowPass(char id, Top top, Meet meet, Direction direction);
-  void computeGenKill(const BlockList& blocks, BlockStates& states);
-  void traverseForwards(const BlockList& blocks, BlockStates& states);
-  void traverseBackwards(const BlockList& blocks, BlockStates& states);
+  DataFlowPass(char ID, Meet meet, Direction direction);
+  void initStates(const BlockList& blocks, BlockStates& states);
+  // void initStates(const std::vector<BasicBlock *>& blocks,
+  //   BlockStates& states);
+  void traverseForwards(const BasicBlock* start, BlockStates& states);
+  void traverseBackwards(const BasicBlock* start, BlockStates& states);
   void meetFunction(const Assignments& in, Assignments& out);
   void display(const BlockList& blocks, BlockStates& states);
   BlockStates runOnBlocks(const BlockList& blocks);
@@ -64,7 +67,6 @@ class DataFlowPass : public FunctionPass {
   virtual void getAnalysisUsage(AnalysisUsage& AU) const;
 
  protected:
-  const Top _top;
   const Meet _meet;
   const Direction _direction;
 };

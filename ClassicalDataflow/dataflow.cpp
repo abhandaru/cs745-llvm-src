@@ -16,9 +16,8 @@ namespace llvm {
 // This constructor calls the FunctionPass constructor (it extends that class).
 // Use initializer listed to assign constants on instantiation.
 //
-DataFlowPass::DataFlowPass(char id, Top top, Meet meet, Direction direction) :
-    FunctionPass(id),
-    _top(top),
+DataFlowPass::DataFlowPass(char ID, Meet meet, Direction direction) :
+    FunctionPass(ID),
     _meet(meet),
     _direction(direction) { };
 
@@ -27,17 +26,19 @@ DataFlowPass::DataFlowPass(char id, Top top, Meet meet, Direction direction) :
 // Compute the generate and kill sets for each basic block in the given
 // function. The generate and kill functions are overriden by the subclass.
 //
-void DataFlowPass::computeGenKill(const BlockList& blocks, BlockStates& states) {
+void DataFlowPass::initStates(const BlockList& blocks, BlockStates& states) {
   for (BlockList::const_iterator FI = blocks.begin(), FE = blocks.end();
       FI != FE; ++FI) {
     const BasicBlock& block = *FI;
     BlockState state;
     state.generates = generate(block);
     state.kills = kill(block);
-    if (_direction == FORWARDS)
+    // init the input or output based on direction
+    if (_direction == FORWARDS) {
       state.out = init(block);
-    else 
+    } else {
       state.in = init(block);
+    }
     // insert into map
     states.insert(BlockStatePair(&block, state));
   }
@@ -48,12 +49,11 @@ void DataFlowPass::computeGenKill(const BlockList& blocks, BlockStates& states) 
 // Do a forwards traversal on the Control Flow Graph to perform the given
 // analysis. The BlockState map is updated during the traversal.
 //
-void DataFlowPass::traverseForwards(const BlockList& blocks, BlockStates& states) {
+void DataFlowPass::traverseForwards(const BasicBlock* start, BlockStates& states) {
   std::queue<const BasicBlock*> worklist;
   std::set<const BasicBlock*> visited;
 
   // Set up initial conditions.
-  const BasicBlock* start = &(blocks.front());
   BlockState& start_state = states[start];
 
   Assignments topSet = top(*start);
@@ -98,16 +98,14 @@ void DataFlowPass::traverseForwards(const BlockList& blocks, BlockStates& states
 // Do a backwards traversal on the Control Flow Graph to perform the given
 // analysis. The BlockState map is updated during the traversal.
 //
-void DataFlowPass::traverseBackwards(const BlockList& blocks, BlockStates& states) {
+void DataFlowPass::traverseBackwards(const BasicBlock* start, BlockStates& states) {
   std::queue<const BasicBlock*> worklist;
   std::set<const BasicBlock*> visited;
 
   // Set up initial conditions.
-  const BasicBlock* start = &(blocks.back());
   BlockState& start_state = states[start];
 
   Assignments topSet = top(*start);
-  DataFlowUtil::print(topSet);
   start_state.in = topSet;
   worklist.push(start);
 
@@ -128,7 +126,6 @@ void DataFlowPass::traverseBackwards(const BlockList& blocks, BlockStates& state
     // See if we need to inspect this node.
     BlockState& state = states[current];
     if (visited.count(current) && DataFlowUtil::setEquals(state.in, meet)) {
-      // cout << "      <input unchanged>" << endl;
       continue;
     }
 
@@ -184,17 +181,19 @@ BlockStates DataFlowPass::runOnBlocks(const BlockList& blocks) {
   BlockStates states;
 
   // First pass: precompute generate and kill sets.
-  computeGenKill(blocks, states);
+  initStates(blocks, states);
   cout << endl;
 
   // iterate for a forwards pass
   if (_direction == FORWARDS) {
-    traverseForwards(blocks, states);
+    const BasicBlock* start = &(blocks.front());
+    traverseForwards(start, states);
   }
 
   // iterate for a backwards pass
   else if (_direction == BACKWARDS) {
-    traverseBackwards(blocks, states);
+    const BasicBlock* start = &(blocks.back());
+    traverseBackwards(start, states);
   }
 
   // return copy of states

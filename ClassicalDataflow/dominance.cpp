@@ -12,9 +12,7 @@ using std::endl;
 namespace llvm {
 
 
-DominancePass::DominancePass() : DataFlowPass(ID, NONE, INTERSECTION, FORWARDS) {
-  cout << "DominancePass" << endl;
-};
+DominancePass::DominancePass() : DataFlowPass(ID, UNION, BACKWARDS) { };
 
 
 //
@@ -24,6 +22,10 @@ Assignments DominancePass::top(const BasicBlock& block) {
   	return Assignments();
 }
 
+
+//
+// Override the init function for BlockStates
+//
 Assignments DominancePass::init(const BasicBlock& block) {
   const Function& fn = *(&block)->getParent();
   Assignments all;
@@ -34,6 +36,7 @@ Assignments DominancePass::init(const BasicBlock& block) {
   }
   return all;
 }
+
 
 //
 // Override generate function of DataFlowPass to use uses().
