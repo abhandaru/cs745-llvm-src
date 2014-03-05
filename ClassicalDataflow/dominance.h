@@ -1,4 +1,4 @@
-// 15-745 S14 Assignment 2: liveness.h
+// 15-745 S14 Assignment 3: dominance.h
 // Group: akbhanda, zheq
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@ class DominancePass : public DataFlowPass {
  public:
   static char ID;
   DominancePass();
-  Assignments top(const BasicBlock& block);
+  Assignments top(const Function& fn);
   Assignments generate(const BasicBlock& block);
   Assignments kill(const BasicBlock& block);
   void transferFn(const Assignments& generate, const Assignments& kill,

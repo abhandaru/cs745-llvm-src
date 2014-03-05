@@ -16,8 +16,9 @@ namespace llvm {
 // This constructor calls the FunctionPass constructor (it extends that class).
 // Use initializer listed to assign constants on instantiation.
 //
-DataFlowPass::DataFlowPass(char id, Meet meet, Direction direction) :
+DataFlowPass::DataFlowPass(char id, Top top, Meet meet, Direction direction) :
     FunctionPass(id),
+    _top(top),
     _meet(meet),
     _direction(direction) { };
 
@@ -51,7 +52,7 @@ void DataFlowPass::traverseForwards(const BlockList& blocks, BlockStates& states
   const BasicBlock* start = &(blocks.front());
   BlockState& start_state = states[start];
 
-  Assignments topSet = top(*start);
+  Assignments topSet = top(*start->getParent());
   start_state.out = topSet;
   worklist.push(start);
 
@@ -101,7 +102,7 @@ void DataFlowPass::traverseBackwards(const BlockList& blocks, BlockStates& state
   const BasicBlock* start = &(blocks.back());
   BlockState& start_state = states[start];
 
-  Assignments topSet = top(*start);
+  Assignments topSet = top(*start->getParent());
   DataFlowUtil::print(topSet);
   start_state.out = topSet;
   worklist.push(start);

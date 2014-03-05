@@ -4,7 +4,6 @@
 
 #include "loop-invariant-code-motion.h"
 
-
 using std::cout;
 using std::endl;
 using std::vector;
