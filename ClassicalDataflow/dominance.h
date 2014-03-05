@@ -2,8 +2,8 @@
 // Group: akbhanda, zheq
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __LIVENESS_H__
-#define __LIVENESS_H__
+#ifndef __DOMINANCE_PASS_H__
+#define __DOMINANCE_PASS_H__
 
 #include "llvm/IR/Function.h"
 #include "llvm/Pass.h"
@@ -14,10 +14,11 @@
 namespace llvm {
 
 
-class Liveness : public DataFlowPass {
+class DominancePass : public DataFlowPass {
  public:
   static char ID;
-  Liveness();
+  DominancePass();
+  Assignments top(const BasicBlock& block);
   Assignments generate(const BasicBlock& block);
   Assignments kill(const BasicBlock& block);
   void transferFn(const Assignments& generate, const Assignments& kill,
