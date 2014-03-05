@@ -34,6 +34,7 @@ void DataFlowPass::computeGenKill(const BlockList& blocks, BlockStates& states) 
     BlockState state;
     state.generates = generate(block);
     state.kills = kill(block);
+    state.out = init(block);
     // insert into map
     states.insert(BlockStatePair(&block, state));
   }
@@ -52,7 +53,7 @@ void DataFlowPass::traverseForwards(const BlockList& blocks, BlockStates& states
   const BasicBlock* start = &(blocks.front());
   BlockState& start_state = states[start];
 
-  Assignments topSet = top(*start->getParent());
+  Assignments topSet = top(*start);
   start_state.out = topSet;
   worklist.push(start);
 
@@ -102,7 +103,7 @@ void DataFlowPass::traverseBackwards(const BlockList& blocks, BlockStates& state
   const BasicBlock* start = &(blocks.back());
   BlockState& start_state = states[start];
 
-  Assignments topSet = top(*start->getParent());
+  Assignments topSet = top(*start);
   DataFlowUtil::print(topSet);
   start_state.out = topSet;
   worklist.push(start);

@@ -12,7 +12,7 @@ using std::endl;
 namespace llvm {
 
 
-DominancePass::DominancePass() : DataFlowPass(ID, ALL, INTERSECTION, FORWARDS) {
+DominancePass::DominancePass() : DataFlowPass(ID, NONE, INTERSECTION, FORWARDS) {
   cout << "DominancePass" << endl;
 };
 
@@ -20,7 +20,12 @@ DominancePass::DominancePass() : DataFlowPass(ID, ALL, INTERSECTION, FORWARDS) {
 //
 // Override the function for generating the top set for the pass.
 //
-Assignments DominancePass::top(const Function& fn) {
+Assignments DominancePass::top(const BasicBlock& block) {
+  	return Assignments();
+}
+
+Assignments DominancePass::init(const BasicBlock& block) {
+  const Function& fn = *(&block)->getParent();
   Assignments all;
   for (Function::const_iterator I = fn.begin(), IE = fn.end(); I != IE; ++I) {
     const BasicBlock* block = I;
@@ -30,12 +35,13 @@ Assignments DominancePass::top(const Function& fn) {
   return all;
 }
 
-
 //
 // Override generate function of DataFlowPass to use uses().
 //
 Assignments DominancePass::generate(const BasicBlock& block) {
-  return DataFlowUtil::uses(block);
+  Assignments genSet;
+  genSet.insert(Assignment(&block));
+  return genSet;
 }
 
 

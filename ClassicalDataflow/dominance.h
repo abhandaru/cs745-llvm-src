@@ -18,7 +18,8 @@ class DominancePass : public DataFlowPass {
  public:
   static char ID;
   DominancePass();
-  Assignments top(const Function& fn);
+  Assignments top(const BasicBlock& block);
+  Assignments init(const BasicBlock& block);
   Assignments generate(const BasicBlock& block);
   Assignments kill(const BasicBlock& block);
   void transferFn(const Assignments& generate, const Assignments& kill,

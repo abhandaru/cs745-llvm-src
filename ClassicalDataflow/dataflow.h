@@ -52,7 +52,8 @@ class DataFlowPass : public FunctionPass {
   BlockStates runOnBlocks(const BlockList& blocks);
 
   // data flow API
-  virtual Assignments top(const Function& fn) = 0;
+  virtual Assignments top(const BasicBlock& block) = 0;
+  virtual Assignments init(const BasicBlock& block) = 0;
   virtual Assignments generate(const BasicBlock& block) = 0;
   virtual Assignments kill(const BasicBlock& block) = 0;
   virtual void transferFn(const Assignments& generate, const Assignments& kill,
