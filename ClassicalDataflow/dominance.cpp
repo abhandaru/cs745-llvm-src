@@ -12,15 +12,16 @@ using std::endl;
 namespace llvm {
 
 
-DominancePass::DominancePass() : DataFlowPass(ID, UNION, BACKWARDS) { };
+DominancePass::DominancePass() : DataFlowPass(ID, UNION, BACKWARDS) {
+  cout << "DominancePass" << endl;
+};
 
 
 //
 // Override the function for generating the top set for the pass.
 //
 Assignments DominancePass::top(const BasicBlock& block) {
-  const Function* fn = block.getParent(); // should never be null
-  return DataFlowUtil::all(*fn);          // or we will segfault here
+  return Assignments();
 }
 
 

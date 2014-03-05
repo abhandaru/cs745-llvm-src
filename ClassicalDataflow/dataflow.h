@@ -43,24 +43,26 @@ enum Top {
 
 class DataFlowPass : public FunctionPass {
  public:
-  DataFlowPass(char id, Top top, Meet meet, Direction direction);
-  void computeGenKill(const Function& fn, BlockStates& states);
-  void traverseForwards(const Function& fn, BlockStates& states);
-  void traverseBackwards(const Function& fn, BlockStates& states);
+  DataFlowPass(char id, Meet meet, Direction direction);
+  void computeGenKill(const BlockList& blocks, BlockStates& states);
+  void traverseForwards(const BlockList& blocks, BlockStates& states);
+  void traverseBackwards(const BlockList& blocks, BlockStates& states);
   void meetFunction(const Assignments& in, Assignments& out);
-  Assignments getTop(const Function& fn);
-  void display(const Function& fn, BlockStates& states);
+  void display(const BlockList& blocks, BlockStates& states);
+  BlockStates runOnBlocks(const BlockList& blocks);
+
   // data flow API
+  virtual Assignments top(const BasicBlock& block) = 0;
   virtual Assignments generate(const BasicBlock& block) = 0;
   virtual Assignments kill(const BasicBlock& block) = 0;
   virtual void transferFn(const Assignments& generate, const Assignments& kill,
       const Assignments& input, Assignments& output) = 0;
+
   // pass API
   virtual bool runOnFunction(Function& F);
   virtual void getAnalysisUsage(AnalysisUsage& AU) const;
 
  protected:
-  const Top _top;
   const Meet _meet;
   const Direction _direction;
 };
