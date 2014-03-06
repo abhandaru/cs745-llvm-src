@@ -69,9 +69,7 @@ void DataFlowPass::traverseForwards(const BasicBlock* start, BlockStates& states
 
   // Set up initial conditions.
   BlockState& start_state = states[start];
-
-  Assignments topSet = top(*start);
-  start_state.out = topSet;
+  start_state.out = top(*start);
   worklist.push(start);
 
   // Process queue until it is empty.
@@ -81,7 +79,8 @@ void DataFlowPass::traverseForwards(const BasicBlock* start, BlockStates& states
     worklist.pop();
 
     // determine the meet of all successors
-    Assignments meet = topSet;
+    BlockState& state = states[current];
+    Assignments meet = state.out;
     for (const_pred_iterator I = pred_begin(current), IE = pred_end(current);
         I != IE; ++I) {
       BlockState& pred_state = states[*I];
@@ -89,7 +88,6 @@ void DataFlowPass::traverseForwards(const BasicBlock* start, BlockStates& states
     }
 
     // see if we need to inspect this node
-    BlockState& state = states[current];
     if (visited.count(current) && DataFlowUtil::setEquals(state.in, meet)) {
       continue;
     }
@@ -118,9 +116,7 @@ void DataFlowPass::traverseBackwards(const BasicBlock* start, BlockStates& state
 
   // Set up initial conditions.
   BlockState& start_state = states[start];
-
-  Assignments topSet = top(*start);
-  start_state.in = topSet;
+  start_state.in = top(*start);
   worklist.push(start);
 
   // Process queue until it is empty.
@@ -130,7 +126,8 @@ void DataFlowPass::traverseBackwards(const BasicBlock* start, BlockStates& state
     worklist.pop();
 
     // determine the meet of all successors
-    Assignments meet = topSet;
+    BlockState& state = states[current];
+    Assignments meet = state.in;
     for (succ_const_iterator I = succ_begin(current), IE = succ_end(current);
         I != IE; ++I) {
       BlockState& succ_state = states[*I];
@@ -138,7 +135,6 @@ void DataFlowPass::traverseBackwards(const BasicBlock* start, BlockStates& state
     }
 
     // See if we need to inspect this node.
-    BlockState& state = states[current];
     if (visited.count(current) && DataFlowUtil::setEquals(state.in, meet)) {
       continue;
     }

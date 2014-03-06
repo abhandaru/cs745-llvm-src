@@ -12,7 +12,7 @@ using std::endl;
 namespace llvm {
 
 
-DominancePass::DominancePass() : DataFlowPass(ID, UNION, BACKWARDS) { };
+DominancePass::DominancePass() : DataFlowPass(ID, INTERSECTION, FORWARDS) { };
 
 
 //

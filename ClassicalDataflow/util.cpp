@@ -126,12 +126,15 @@ void DataFlowUtil::setUnion(Assignments& dest, const Assignments& src) {
 
 
 void DataFlowUtil::setIntersect(Assignments& dest, const Assignments& src) {
+  Assignments result;
   for (Assignments::const_iterator i = src.begin(); i != src.end(); ++i) {
     const Assignment& test = *i;
-    if (dest.count(test) < 1) {
-      dest.erase(test);
+    if (src.count(test) > 0 && dest.count(test) > 0) {
+      result.insert(test);
     }
   }
+  // rewrite the destination
+  dest = result;
 }
 
 
