@@ -5,6 +5,9 @@
 #ifndef __DOMINANCE_PASS_H__
 #define __DOMINANCE_PASS_H__
 
+#include <set>
+#include <queue>
+
 #include "llvm/IR/Function.h"
 #include "llvm/Pass.h"
 
@@ -24,6 +27,9 @@ class DominancePass : public DataFlowPass {
   Assignments kill(const BasicBlock& block);
   void transferFn(const Assignments& generate, const Assignments& kill,
     const Assignments& input, Assignments& output);
+
+  // deriving tree
+  const BasicBlock* getIdom(BlockStates& states, const BasicBlock* node);
 };
 
 

@@ -23,7 +23,6 @@
 #include "util.h"
 
 
-
 namespace llvm {
 
 
@@ -37,10 +36,6 @@ enum Direction {
   BACKWARDS
 };
 
-enum Top {
-  ALL,
-  NONE
-};
 
 class DataFlowPass : public FunctionPass {
  public:

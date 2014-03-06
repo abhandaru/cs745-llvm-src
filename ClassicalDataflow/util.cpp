@@ -10,6 +10,7 @@
 #include "util.h"
 
 
+using std::cerr;
 using std::cout;
 using std::endl;
 
@@ -164,12 +165,12 @@ bool DataFlowUtil::setEquals(const Assignments& a, const Assignments& b) {
 // this function.
 //
 void DataFlowUtil::print(const Assignments& assignments) {
-  cout << "{ ";
+  cerr << "{ ";
   for (Assignments::const_iterator I = assignments.begin(),
       IE = assignments.end(); I != IE; ++I) {
-    cout << (*I).pointer->getName().data() << " ";
+    cerr << (*I).pointer->getName().data() << " ";
   }
-  cout << "}";
+  cerr << "}";
 }
 
 

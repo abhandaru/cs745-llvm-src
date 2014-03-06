@@ -5,6 +5,7 @@
 #include "loop-invariant-code-motion.h"
 
 using std::cout;
+using std::cerr;
 using std::endl;
 using std::vector;
 
@@ -29,29 +30,27 @@ bool LicmPass::runOnLoop(Loop *loop, LPPassManager &LPM) {
 
   // check if there is a preheader
   BasicBlock* preheader = loop->getLoopPreheader();
-  if (preheader) {
-    cout << "- found preheader" << endl;
-  } else {
-    cout << "- no preheader ... skipping" << endl;
+  if (!preheader) {
     return false;
   }
-
-  // dump preheader
-  // preheader->dump();
 
   // run analysis passes on blocks
   const BlockVector& blocks = loop->getBlocks();
   BlockStates states = dominance.runOnBlocks(blocks);
   for (BlockVector::const_iterator I = blocks.begin(), IE = blocks.end();
-    I != IE; ++I) {
+      I != IE; ++I) {
     const BasicBlock* block = *I;
-    BlockState& state = states[block];
-    // print out dominator list
-    DataFlowUtil::print(state.out);
-    cout << endl;
+    const BasicBlock* idom = dominance.getIdom(states, block);
+    cerr << block->getName().data() << " idom ";
+    if (idom) {
+      cerr << idom->getName().data();
+    } else {
+      cerr << preheader->getName().data();
+    }
+    cerr << endl;
   }
-
   // assume we modified the loop
+  cerr << endl;
   return true;
 };
 

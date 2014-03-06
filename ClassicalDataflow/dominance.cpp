@@ -5,6 +5,7 @@
 #include "dominance.h"
 
 
+using std::cerr;
 using std::cout;
 using std::endl;
 
@@ -64,8 +65,37 @@ Assignments DominancePass::kill(const BasicBlock& block) {
 void DominancePass::transferFn(const Assignments& generate,
     const Assignments& kill, const Assignments& input, Assignments& output) {
   output = input;
-  // DataFlowUtil::setSubtract(output, kill);
   DataFlowUtil::setUnion(output, generate);
+}
+
+
+const BasicBlock* DominancePass::getIdom(BlockStates& states,
+    const BasicBlock* node) {
+  std::queue<const BasicBlock*> worklist;
+  std::set<const BasicBlock*> visited;
+  // Set initial conditions.
+  Assignments stops = states[node].out;
+  worklist.push(node);
+  while (!worklist.empty()) {
+    const BasicBlock* current = worklist.front();
+    worklist.pop();
+    // Skip if visited.
+    if (visited.count(current)) {
+      continue;
+    }
+    // Did we find the idom?
+    if (node != current && stops.count(Assignment(current)) > 0) {
+      return current;
+    }
+    // Mark visited and add all predecessors to the worklist.
+    visited.insert(current);
+    for (const_pred_iterator I = pred_begin(current), IE = pred_end(current);
+        I != IE; ++I) {
+      worklist.push(*I);
+    }
+  }
+  // Return null if there is no idom node (possible for 1st block).
+  return NULL;
 }
 
 
