@@ -67,15 +67,26 @@ void DataFlowPass::traverseForwards(const BasicBlock* start, BlockStates& states
     worklist.pop();
 
     // determine the meet of all successors
-    Assignments meet = topSet;
+    Assignments meet;
+    if (current != start)
+      meet = init(*current);
+    else 
+      meet = topSet;
+
+    cout << current->getName().data() << " -> ";
     for (const_pred_iterator I = pred_begin(current), IE = pred_end(current);
         I != IE; ++I) {
       BlockState& pred_state = states[*I];
+      cout << (*I)->getName().data() << ",";
+      DataFlowUtil::print(pred_state.out);
       meetFunction(pred_state.out, meet);
     }
+    
 
     // see if we need to inspect this node
     BlockState& state = states[current];
+    // DataFlowUtil::print(meet);
+    cout << endl;
     if (visited.count(current) && DataFlowUtil::setEquals(state.in, meet)) {
       continue;
     }
