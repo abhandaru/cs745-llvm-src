@@ -37,20 +37,21 @@ bool LicmPass::runOnLoop(Loop *loop, LPPassManager &LPM) {
   }
 
   // dump preheader
-  preheader->dump();
+  // preheader->dump();
 
-  // get blocks
-  // BlockList blocks;
-  cout << "- list of blocks" << endl;
-  for (unsigned i = 0; i != loop->getBlocks().size(); ++i) {
-    BasicBlock *block = loop->getBlocks()[i];
-    block->dump();
-    // blocks.push_back(block);
+  // run analysis passes on blocks
+  const BlockVector& blocks = loop->getBlocks();
+  BlockStates states = dominance.runOnBlocks(blocks);
+  for (BlockVector::const_iterator I = blocks.begin(), IE = blocks.end();
+    I != IE; ++I) {
+    const BasicBlock* block = *I;
+    BlockState& state = states[block];
+    // print out dominator list
+    DataFlowUtil::print(state.out);
+    cout << endl;
   }
 
-  // BlockStates states = dominance.runOnBlocks(blocks);
-  // dominance.display(blocks, states);
-
+  // assume we modified the loop
   return true;
 };
 

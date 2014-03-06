@@ -46,13 +46,13 @@ class DataFlowPass : public FunctionPass {
  public:
   DataFlowPass(char ID, Meet meet, Direction direction);
   void initStates(const BlockList& blocks, BlockStates& states);
-  // void initStates(const std::vector<BasicBlock *>& blocks,
-  //   BlockStates& states);
+  void initStates(const BlockVector& blocks, BlockStates& states);
   void traverseForwards(const BasicBlock* start, BlockStates& states);
   void traverseBackwards(const BasicBlock* start, BlockStates& states);
-  void meetFunction(const Assignments& in, Assignments& out);
+  void meetFn(const Assignments& in, Assignments& out);
   void display(const BlockList& blocks, BlockStates& states);
   BlockStates runOnBlocks(const BlockList& blocks);
+  BlockStates runOnBlocks(const BlockVector& blocks);
 
   // data flow API
   virtual Assignments top(const BasicBlock& block) = 0;
@@ -69,6 +69,9 @@ class DataFlowPass : public FunctionPass {
  protected:
   const Meet _meet;
   const Direction _direction;
+
+ private:
+  void initState(const BasicBlock& block, BlockState& state);
 };
 
 

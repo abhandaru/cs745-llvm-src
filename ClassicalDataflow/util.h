@@ -8,6 +8,7 @@
 #include <iostream>
 #include <set>
 #include <utility>
+#include <vector>
 
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallSet.h"
@@ -47,6 +48,7 @@ class BlockState {
 typedef DenseMap<const BasicBlock*, BlockState> BlockStates;
 typedef std::pair<const BasicBlock*, BlockState> BlockStatePair;
 typedef Function::BasicBlockListType BlockList;
+typedef std::vector<BasicBlock *> BlockVector;
 
 
 //

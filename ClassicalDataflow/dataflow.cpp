@@ -31,16 +31,30 @@ void DataFlowPass::initStates(const BlockList& blocks, BlockStates& states) {
       FI != FE; ++FI) {
     const BasicBlock& block = *FI;
     BlockState state;
-    state.generates = generate(block);
-    state.kills = kill(block);
-    // init the input or output based on direction
-    if (_direction == FORWARDS) {
-      state.out = init(block);
-    } else {
-      state.in = init(block);
-    }
-    // insert into map
+    initState(block, state);
     states.insert(BlockStatePair(&block, state));
+  }
+}
+
+void DataFlowPass::initStates(const BlockVector& blocks, BlockStates& states) {
+  for (BlockVector::const_iterator FI = blocks.begin(), FE = blocks.end();
+      FI != FE; ++FI) {
+    const BasicBlock& block = **FI;
+    BlockState state;
+    initState(block, state);
+    states.insert(BlockStatePair(&block, state));
+  }
+}
+
+void DataFlowPass::initState(const BasicBlock& block, BlockState& state) {
+  // pre-compute generate and kill sets
+  state.generates = generate(block);
+  state.kills = kill(block);
+  // init the input or output based on direction
+  if (_direction == FORWARDS) {
+    state.out = init(block);
+  } else {
+    state.in = init(block);
   }
 }
 
@@ -71,7 +85,7 @@ void DataFlowPass::traverseForwards(const BasicBlock* start, BlockStates& states
     for (const_pred_iterator I = pred_begin(current), IE = pred_end(current);
         I != IE; ++I) {
       BlockState& pred_state = states[*I];
-      meetFunction(pred_state.out, meet);
+      meetFn(pred_state.out, meet);
     }
 
     // see if we need to inspect this node
@@ -120,7 +134,7 @@ void DataFlowPass::traverseBackwards(const BasicBlock* start, BlockStates& state
     for (succ_const_iterator I = succ_begin(current), IE = succ_end(current);
         I != IE; ++I) {
       BlockState& succ_state = states[*I];
-      meetFunction(succ_state.in, meet);
+      meetFn(succ_state.in, meet);
     }
 
     // See if we need to inspect this node.
@@ -147,7 +161,7 @@ void DataFlowPass::traverseBackwards(const BasicBlock* start, BlockStates& state
 // Performs the correct meet operation on two input sets.
 // The output is stored in the second set. The first set is unmodified.
 //
-void DataFlowPass::meetFunction(const Assignments& in, Assignments& out) {
+void DataFlowPass::meetFn(const Assignments& in, Assignments& out) {
   if (_meet == UNION) {
     DataFlowUtil::setUnion(out, in);
   } else if (_meet == INTERSECTION) {
@@ -177,26 +191,41 @@ void DataFlowPass::display(const BlockList& blocks, BlockStates& states) {
 }
 
 
+//
+// Generic helper functions for arbitrary sets of blocks
+//
 BlockStates DataFlowPass::runOnBlocks(const BlockList& blocks) {
   BlockStates states;
-
   // First pass: precompute generate and kill sets.
   initStates(blocks, states);
-  cout << endl;
-
   // iterate for a forwards pass
   if (_direction == FORWARDS) {
     const BasicBlock* start = &(blocks.front());
     traverseForwards(start, states);
   }
-
   // iterate for a backwards pass
   else if (_direction == BACKWARDS) {
     const BasicBlock* start = &(blocks.back());
     traverseBackwards(start, states);
   }
-
   // return copy of states
+  return states;
+}
+
+BlockStates DataFlowPass::runOnBlocks(const BlockVector& blocks) {
+  BlockStates states;
+  // First pass: precompute generate and kill sets.
+  initStates(blocks, states);
+  // iterate for a forwards pass
+  if (_direction == FORWARDS) {
+    const BasicBlock* start = blocks.front();
+    traverseForwards(start, states);
+  }
+  // iterate for a backwards pass
+  else if (_direction == BACKWARDS) {
+    const BasicBlock* start = blocks.back();
+    traverseBackwards(start, states);
+  }
   return states;
 }
 
