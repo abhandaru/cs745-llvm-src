@@ -51,6 +51,14 @@ void LicmPass::showDominators(const BlockVector& blocks,
 bool LicmPass::isInvariant(Loop* loop, set<const Instruction*>& invariants,
     const Instruction* instr) {
     instr->dump();
+
+    // Must also satisfy these conditions to ensure safety of movement.
+    if (!isSafeToSpeculativelyExecute(instr) ||
+        instr->mayReadFromMemory() ||
+        isa<LandingPadInst>(instr)) {
+      return false;
+    }
+
     for (User::const_op_iterator OI = instr->op_begin(), OE = instr->op_end();
         OI != OE; ++OI) {
       const Value *val = *OI;
@@ -58,11 +66,9 @@ bool LicmPass::isInvariant(Loop* loop, set<const Instruction*>& invariants,
         return false;
       }
     }
-    // Extra conditions to ensure safety of code movement.
-    return (
-      isSafeToSpeculativelyExecute(instr) &&
-      !instr->mayReadFromMemory() &&
-      !isa<LandingPadInst>(instr));
+
+    // Satisfies all conditions.
+    return true;
 }
 
 
@@ -78,22 +84,8 @@ bool LicmPass::isInvariant(Loop* loop, set<const Instruction*>& invariants,
     return invariant;
   }
 
-  // invariance check for constants
-  else if (isa<const Constant>(operand)) {
-    cerr << "   - op<Constant>: invariant" << endl;
-    return true;
-  }
-
-  // invariance check for argument operand
-  else if (isa<const Argument>(operand)) {
-    cerr << "   - op<Argument>: invariant" << endl;
-    return true;
-  }
-
-  // could not confirm operand as invariant
-  cerr << "  - op<Other>" << endl;
-  operand->dump();
-  return false;
+  // All non-instructions are invariant.
+  return true;
 }
 
 
