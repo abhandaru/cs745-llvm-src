@@ -174,16 +174,15 @@ bool LicmPass::runOnLoop(Loop *loop, LPPassManager &LPM) {
   Invariants invariants;
   findInvariants(loop, blocks, states, preheader, invariants);
 
+  // Finally, hoist the invariants into the preheader.
+  // We want to delete this instruction and move it to the end of the
+  // preheader (before the branch). We can do with with moveBefore.
   for (Invariants::iterator I = invariants.begin(), IE = invariants.end();
       I != IE; ++I) {
-    const Instruction* instr = *I;
+    Instruction* end = &(preheader->back());
+    Instruction* instr = *I;
     instr->dump();
-    // We want to delete this instruction and move it to the end of the
-    // preheader. We can do with with eraseFromParent and insertAfter.
-    // TODO: Everything is constant. How do we get a mutable version of
-    //   the blocks? The preheader is mutable.
-    // instr->eraseFromParent();
-    // instr->insertAfter(preheader->back());
+    instr->moveBefore(end);
   }
 
   // assume we modified the loop
