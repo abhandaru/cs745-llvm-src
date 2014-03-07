@@ -15,6 +15,7 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/Pass.h"
+#include "llvm/Transforms/Utils/Local.h"
 
 #include "dataflow.h"
 #include "util.h"

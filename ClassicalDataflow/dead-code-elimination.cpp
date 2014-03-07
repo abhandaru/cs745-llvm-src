@@ -8,6 +8,7 @@
 using std::cerr;
 using std::cout;
 using std::endl;
+using std::set;
 
 
 namespace llvm {
@@ -80,29 +81,33 @@ bool DcePass::runOnFunction(Function& fn) {
     BasicBlock* block = &(*I);
     BlockState& state = states[block];
 
-    Assignments blockOut = state.in;
     for(BasicBlock::iterator itrB = (*block).begin(); itrB != (*block).end(); ++itrB) {
-      Instruction* instr = itrB;
-      blockOut.erase(Assignment(instr));
-      if(isa<TerminatorInst>(instr) || isa<DbgInfoIntrinsic>(instr) 
-          || isa<LandingPadInst>(instr) || instr->mayHaveSideEffects()) {
+      Instruction* instr = &(*itrB);
+      Value* val = instr;
+      if(isa<TerminatorInst>(val) || isa<DbgInfoIntrinsic>(val) 
+          || isa<LandingPadInst>(val) || instr->mayHaveSideEffects()) {
         for(BasicBlock::iterator itrTmp = itrB; itrTmp != (*block).end(); ++itrTmp) {
           Instruction* inst = itrTmp;
           if (inst != instr) {
             toRemove.insert(inst);
-            inst->removeFromParent();
             break;
           }
         }
       }
       else {
         toRemove.insert(instr);
-        instr->removeFromParent();
       }
-       
-
+      // if (isInstructionTriviallyDead(instr))
+      //   toRemove.insert(instr);
     }
 
+    for(set<Instruction*>::iterator I = toRemove.begin(), IE = toRemove.end();
+        I != IE; ++I) {
+      Instruction* instr = *I;
+      // instr->removeAllReferences();
+      // if()
+        instr->eraseFromParent();
+    }
 
   }
   display(blocks, states);
