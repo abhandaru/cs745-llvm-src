@@ -16,3 +16,8 @@ int loop (int a, int b, int c)
   }
   return ret;
 }
+
+int main(int argc, char const *argv[]) {
+  int a = loop(4, 20, 40);
+  return a;
+}

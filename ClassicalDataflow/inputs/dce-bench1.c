@@ -4,3 +4,8 @@ int deadvar(int a, int b) {
   int x = z - 2;
 	return c + a;
 }
+
+int main(int argc, char const *argv[]) {
+  int a = deadvar(3, 4);
+  return a;
+}
