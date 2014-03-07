@@ -181,12 +181,10 @@ bool LicmPass::runOnLoop(Loop *loop, LPPassManager &LPM) {
       I != IE; ++I) {
     Instruction* end = &(preheader->back());
     Instruction* instr = *I;
-    instr->dump();
     instr->moveBefore(end);
   }
 
   // assume we modified the loop
-  cerr << endl;
   return true;
 };
 

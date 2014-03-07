@@ -17,7 +17,6 @@
 #include "llvm/Pass.h"
 
 #include "dominance.h"
-#include "reaching.h"
 #include "util.h"
 
 namespace llvm {
@@ -49,7 +48,6 @@ class LicmPass : public LoopPass {
 
   // pass instances
   DominancePass dominance;
-  ReachingPass reaching;
 
   // data from LLVM passes
   LoopInfo* info;
