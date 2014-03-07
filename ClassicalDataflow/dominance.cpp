@@ -73,22 +73,22 @@ void DominancePass::transferFn(const Assignments& generate,
 // the computed block states resulting from this pass.
 //
 DominancePass::Node DominancePass::getDominatorTree(const BlockVector& blocks,
-    BlockStates& states, const BasicBlock* preheader) {
+    BlockStates& states, BasicBlock* preheader) {
   // initial state
-  DenseMap<const BasicBlock*, Node*> visited;
-  std::vector<const BasicBlock*> stack;
+  DenseMap<BasicBlock*, Node*> visited;
+  std::vector<BasicBlock*> stack;
   Node* root = new Node(NULL, preheader);
   visited[preheader] = root;
 
   // this loop runs until we have visited all nodes
   for (int i = 0; i < blocks.size(); i++) {
-    const BasicBlock* current = blocks[i];
+    BasicBlock* current = blocks[i];
     stack.clear();
 
     // create depth stack
     while (current && !visited.count(current)) {
       stack.push_back(current);
-      const BasicBlock* idom = getIdom(states, current);
+      BasicBlock* idom = getIdom(states, current);
       // edge case when we do not have an idom
       if (idom) current = idom;
       else current = preheader;
@@ -96,7 +96,7 @@ DominancePass::Node DominancePass::getDominatorTree(const BlockVector& blocks,
 
     // pop off stack while creating nodes
     while (!stack.empty()) {
-      const BasicBlock* block = stack.back();
+      BasicBlock* block = stack.back();
       stack.pop_back();
       // parent is the last node we visited
       Node* parent = visited[current];
@@ -121,15 +121,14 @@ DominancePass::Node DominancePass::getDominatorTree(const BlockVector& blocks,
 // current node is in the initial node's strict dominators list, return the
 // current node.
 //
-const BasicBlock* DominancePass::getIdom(BlockStates& states,
-    const BasicBlock* node) {
-  std::queue<const BasicBlock*> worklist;
-  std::set<const BasicBlock*> visited;
+BasicBlock* DominancePass::getIdom(BlockStates& states, BasicBlock* node) {
+  std::queue<BasicBlock*> worklist;
+  std::set<BasicBlock*> visited;
   // Set initial conditions.
   Assignments stops = states[node].out;
   worklist.push(node);
   while (!worklist.empty()) {
-    const BasicBlock* current = worklist.front();
+    BasicBlock* current = worklist.front();
     worklist.pop();
     // Skip if visited.
     if (visited.count(current)) {
@@ -141,7 +140,7 @@ const BasicBlock* DominancePass::getIdom(BlockStates& states,
     }
     // Mark visited and add all predecessors to the worklist.
     visited.insert(current);
-    for (const_pred_iterator I = pred_begin(current), IE = pred_end(current);
+    for (pred_iterator I = pred_begin(current), IE = pred_end(current);
         I != IE; ++I) {
       worklist.push(*I);
     }

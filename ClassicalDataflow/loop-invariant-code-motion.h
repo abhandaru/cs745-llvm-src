@@ -22,31 +22,30 @@
 
 namespace llvm {
 
+typedef std::set<Instruction*> Invariants;
+
 class LicmPass : public LoopPass {
  public:
   static char ID;
   LicmPass();
   void showDominators(const BlockVector& blocks, BlockStates& states,
-      const BasicBlock* preheader);
+      BasicBlock* preheader);
 
   // LoopPass API
   virtual bool runOnLoop(Loop *loop, LPPassManager &LPM);
   virtual void getAnalysisUsage(AnalysisUsage& AU) const;
 
  private:
-  bool isInvariant(const Loop* loop, std::set<const Instruction*>& invariants,
-    const Instruction* instr);
-  bool isInvariant(const Loop* loop, std::set<const Instruction*>& invariants,
-    const Value* operand);
+  bool isInvariant(const Loop* loop, Invariants& invariants, Instruction* instr);
+  bool isInvariant(const Loop* loop, Invariants& invariants, Value* operand);
   bool isTopLevel(const Loop* loop, const BasicBlock* block);
-  void inspectBlock(const Loop* loop, const BasicBlock* block,
-    std::set<const Instruction*>& invariants);
+  void inspectBlock(const Loop* loop, BasicBlock* block, Invariants& invariants);
   void findInvariants(
     const Loop* loop,
     const BlockVector& blocks,
     BlockStates& states,
-    const BasicBlock* preheader,
-    std::set<const Instruction*> invariants);
+    BasicBlock* preheader,
+    Invariants& invariants);
 
   // pass instances
   DominancePass dominance;

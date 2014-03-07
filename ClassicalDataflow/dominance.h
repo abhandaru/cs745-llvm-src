@@ -24,15 +24,15 @@ class DominancePass : public DataFlowPass {
   class Node;
   class Node {
    public:
-    Node(const Node* _parent, const BasicBlock* _data)
+    Node(const Node* _parent, BasicBlock* _data)
         : data(_data), parent(_parent) { };
     ~Node() {
       for (int i = 0; i < children.size(); i++) {
         delete children[i];
       }
     };
-    const BasicBlock* data;
     const Node* parent;
+    BasicBlock* data;
     std::vector<Node *> children;
   };
 
@@ -48,8 +48,8 @@ class DominancePass : public DataFlowPass {
 
   // deriving tree
   DominancePass::Node getDominatorTree(const BlockVector& blocks,
-    BlockStates& states, const BasicBlock* preheader);
-  const BasicBlock* getIdom(BlockStates& states, const BasicBlock* node);
+    BlockStates& states, BasicBlock* preheader);
+  BasicBlock* getIdom(BlockStates& states, BasicBlock* node);
 };
 
 

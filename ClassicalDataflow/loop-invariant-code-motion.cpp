@@ -25,11 +25,11 @@ LicmPass::LicmPass() : LoopPass(ID) {
 // Helper function for printing out dominator information.
 //
 void LicmPass::showDominators(const BlockVector& blocks,
-    BlockStates& states, const BasicBlock* preheader) {
+    BlockStates& states, BasicBlock* preheader) {
   for (BlockVector::const_iterator I = blocks.begin(), IE = blocks.end();
       I != IE; ++I) {
-    const BasicBlock* block = *I;
-    const BasicBlock* idom = dominance.getIdom(states, block);
+    BasicBlock* block = *I;
+    BasicBlock* idom = dominance.getIdom(states, block);
     cerr << block->getName().data() << " idom ";
     if (idom) {
       cerr << idom->getName().data();
@@ -43,11 +43,18 @@ void LicmPass::showDominators(const BlockVector& blocks,
 
 
 //
+// Helper function to determine if the given block is in a sub-loop or not.
+//
+bool LicmPass::isTopLevel(const Loop* loop, const BasicBlock* block) {
+  return info->getLoopFor(block) == loop;
+}
+
+
+//
 // Check if instruction is invariant.
 //
 bool LicmPass::isInvariant(const Loop* loop,
-    set<const Instruction*>& invariants, const Instruction* instr) {
-    instr->dump();
+   Invariants& invariants, Instruction* instr) {
 
     // Must also satisfy these conditions to ensure safety of movement.
     if (!isSafeToSpeculativelyExecute(instr) ||
@@ -57,10 +64,10 @@ bool LicmPass::isInvariant(const Loop* loop,
     }
 
     // See if all operands are invariant.
-    for (User::const_op_iterator OI = instr->op_begin(), OE = instr->op_end();
+    for (User::op_iterator OI = instr->op_begin(), OE = instr->op_end();
         OI != OE; ++OI) {
-      const Value *val = *OI;
-      if (!isInvariant(loop, invariants, val)) {
+      Value *operand = *OI;
+      if (!isInvariant(loop, invariants, operand)) {
         return false;
       }
     }
@@ -78,48 +85,36 @@ bool LicmPass::isInvariant(const Loop* loop,
 // - both have exactly 1 reaching definition and it is invariant
 //
 bool LicmPass::isInvariant(const Loop* loop,
-    set<const Instruction*>& invariants, const Value* operand) {
+    Invariants& invariants, Value* operand) {
   // invariance check for instruction operands
-  if (isa<const Instruction>(operand)) {
-    cerr << "   - op<instr>";
-    const Instruction* instr = dyn_cast<const Instruction>(operand);
-    bool invariant = invariants.count(instr) || !loop->contains(instr);
-    if (invariant) cerr << ": invariant";
-    cerr << endl;
-    return invariant;
+  if (Instruction* instr = dyn_cast<Instruction>(operand)) {
+    return invariants.count(instr) || !loop->contains(instr);
   }
-
   // All non-instructions are invariant.
   return true;
 }
 
 
 //
-// Helper function to determine if the given block is in a sub-loop or not.
+// Find loop invariant instructions in a given block.
+// We can do this block by block because we are traversing the dominator
+// tree in pre-order, which accumulating invariants in our set.
 //
-bool LicmPass::isTopLevel(const Loop* loop, const BasicBlock* block) {
-  return info->getLoopFor(block) == loop;
-}
-
-
-void LicmPass::inspectBlock(const Loop* loop, const BasicBlock* block,
-    set<const Instruction*>& invariants) {
+void LicmPass::inspectBlock(const Loop* loop, BasicBlock* block,
+    Invariants& invariants) {
   // No need to iterate over subloops because they will already have their
   // instructions hoisted. Skip if we are in the subloop.
   bool top_level = isTopLevel(loop, block);
-  cerr << block->getName().data() << " (" << (int)top_level << "):" << endl;
   if (!top_level) {
-    cerr << " - skipping ..." << endl;
     return;
   }
 
   // Iterate through all the intructions.
-  for (BasicBlock::const_iterator J = block->begin(), JE = block->end();
+  for (BasicBlock::iterator J = block->begin(), JE = block->end();
       J != JE; ++J) {
-    const Instruction& instr = *J;
+    Instruction& instr = *J;
     bool invariant = isInvariant(loop, invariants, &instr);
     if (invariant) {
-      cerr << "   - INVARIANT" << endl;
       invariants.insert(&instr);
     }
   }
@@ -134,8 +129,8 @@ void LicmPass::findInvariants(
     const Loop* loop,
     const BlockVector& blocks,
     BlockStates& states,
-    const BasicBlock* preheader,
-    set<const Instruction*> invariants) {
+    BasicBlock* preheader,
+    Invariants& invariants) {
   // Compute the dominance tree.
   DominancePass::Node dom_tree = dominance.getDominatorTree(
       blocks, states, preheader);
@@ -176,8 +171,20 @@ bool LicmPass::runOnLoop(Loop *loop, LPPassManager &LPM) {
   showDominators(blocks, states, preheader);
 
   // Cache all the invariants we have found so far.
-  set<const Instruction*> invariants;
+  Invariants invariants;
   findInvariants(loop, blocks, states, preheader, invariants);
+
+  for (Invariants::iterator I = invariants.begin(), IE = invariants.end();
+      I != IE; ++I) {
+    const Instruction* instr = *I;
+    instr->dump();
+    // We want to delete this instruction and move it to the end of the
+    // preheader. We can do with with eraseFromParent and insertAfter.
+    // TODO: Everything is constant. How do we get a mutable version of
+    //   the blocks? The preheader is mutable.
+    // instr->eraseFromParent();
+    // instr->insertAfter(preheader->back());
+  }
 
   // assume we modified the loop
   cerr << endl;
