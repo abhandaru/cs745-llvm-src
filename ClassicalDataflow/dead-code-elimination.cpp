@@ -74,8 +74,20 @@ bool DcePass::runOnFunction(Function& fn) {
   BlockList& blocks = fn.getBasicBlockList();
   BlockStates states = runOnBlocks(blocks);
   std::set<const Assignment*> lived;
+  for (BlockList::const_iterator I = blocks.begin(), IE = blocks.end();
+      I != IE; ++I) {
+    const BasicBlock* block = &(*I);
+    BlockState& state = states[block];
 
-  // display(blocks, states);
+    Assignments blockOut = state.out;
+    for(BasicBlock::const_reverse_iterator itrB = (*block).rbegin(); itrB != (*block).rend(); ++itrB) {
+      const Instruction& instr = *itrB;
+      
+    }
+
+
+  }
+  
   return false;
 }
 
