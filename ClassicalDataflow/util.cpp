@@ -31,7 +31,7 @@ Assignments DataFlowUtil::uses(const BasicBlock& block) {
     for(OI = user->op_begin(), OE = user->op_end(); OI != OE; ++OI) {
       Value* val = *OI;
       // check if the operand is used
-      if (isa<Instruction>(val) || isa<Argument>(val)) {
+      if ((isa<Instruction>(val) || isa<Argument>(val)) && (!isa<PHINode>(val))) {
         useSet.insert(Assignment(val));
       }
     }

@@ -73,21 +73,39 @@ bool DcePass::runOnFunction(Function& fn) {
   cout << "Function: " << fn.getName().data() << endl << endl;
   BlockList& blocks = fn.getBasicBlockList();
   BlockStates states = runOnBlocks(blocks);
-  std::set<const Assignment*> lived;
-  for (BlockList::const_iterator I = blocks.begin(), IE = blocks.end();
+  std::set<Instruction*> toRemove;
+
+  for (BlockList::iterator I = blocks.begin(), IE = blocks.end();
       I != IE; ++I) {
-    const BasicBlock* block = &(*I);
+    BasicBlock* block = &(*I);
     BlockState& state = states[block];
 
-    Assignments blockOut = state.out;
-    for(BasicBlock::const_reverse_iterator itrB = (*block).rbegin(); itrB != (*block).rend(); ++itrB) {
-      const Instruction& instr = *itrB;
-      
+    Assignments blockOut = state.in;
+    for(BasicBlock::iterator itrB = (*block).begin(); itrB != (*block).end(); ++itrB) {
+      Instruction* instr = itrB;
+      blockOut.erase(Assignment(instr));
+      if(isa<TerminatorInst>(instr) || isa<DbgInfoIntrinsic>(instr) 
+          || isa<LandingPadInst>(instr) || instr->mayHaveSideEffects()) {
+        for(BasicBlock::iterator itrTmp = itrB; itrTmp != (*block).end(); ++itrTmp) {
+          Instruction* inst = itrTmp;
+          if (inst != instr) {
+            toRemove.insert(inst);
+            inst->removeFromParent();
+            break;
+          }
+        }
+      }
+      else {
+        toRemove.insert(instr);
+        instr->removeFromParent();
+      }
+       
+
     }
 
 
   }
-  
+  display(blocks, states);
   return false;
 }
 
