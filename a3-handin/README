@@ -1,4 +1,4 @@
-15-745 S14 Assignment 2: README
+15-745 S14 Assignment 3: README
 Group: akbhanda, zheq
 
 /////////////////////////////////
@@ -8,16 +8,13 @@ Run the project normall as describe in the handout.
 To compile, use:
 $ make
 
-To run the Liveness pass, use:
-$ opt -load ./liveness.so -live loop.bc -o live.out.bc
+To run the LICM (loop invariant code motion) pass, use:
+$ opt -load ./loop-invariant-code-motion.so -loop-simplify -cd-licm test.bc -o out.bc
 
-To run the ReachingDefinitions pass, use:
-$ opt -load ./reaching-definitions.so -reach loop.bc -o reach.out.bc
+To run the DCE (dead come elimination) pass, use:
+$ opt -load ./dead-code-elimination.so -cd-dce test.bc -o out.bc
 
 /////////////////////////////////
 
 A breakdown of the relevant variables at each program point between blocks is
-written to STDOUT is a readable format.
-
-Because the tree is not modified at all by these passes, the output files should
-be the same as the input files.
+written to STDERR in a readable format.
