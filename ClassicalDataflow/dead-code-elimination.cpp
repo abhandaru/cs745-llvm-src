@@ -1,4 +1,4 @@
-// 15-745 S14 Assignment 2=3: reaching.cpp
+// 15-745 S14 Assignment 3: dead-code-elimination.cpp
 // Group: akbhanda, zheq
 ////////////////////////////////////////////////////////////////////////////////
 
