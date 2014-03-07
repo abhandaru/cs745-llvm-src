@@ -1,4 +1,4 @@
-all: dominance.so reaching.so loop-invariant-code-motion.so
+all: dominance.so reaching.so loop-invariant-code-motion.so dead-code-elimination.so
 
 CXXFLAGS = -rdynamic $(shell llvm-config --cxxflags) -g -O0
 
