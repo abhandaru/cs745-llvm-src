@@ -26,18 +26,27 @@ class LicmPass : public LoopPass {
  public:
   static char ID;
   LicmPass();
-  void showDominators(const BlockVector& blocks, const BasicBlock* preheader);
+  void showDominators(const BlockVector& blocks, BlockStates& states,
+      const BasicBlock* preheader);
 
   // LoopPass API
   virtual bool runOnLoop(Loop *loop, LPPassManager &LPM);
   virtual void getAnalysisUsage(AnalysisUsage& AU) const;
 
  private:
-  bool isInvariant(Loop* loop, std::set<const Instruction*>& invariants,
+  bool isInvariant(const Loop* loop, std::set<const Instruction*>& invariants,
     const Instruction* instr);
-  bool isInvariant(Loop* loop, std::set<const Instruction*>& invariants,
+  bool isInvariant(const Loop* loop, std::set<const Instruction*>& invariants,
     const Value* operand);
   bool isTopLevel(const Loop* loop, const BasicBlock* block);
+  void inspectBlock(const Loop* loop, const BasicBlock* block,
+    std::set<const Instruction*>& invariants);
+  void findInvariants(
+    const Loop* loop,
+    const BlockVector& blocks,
+    BlockStates& states,
+    const BasicBlock* preheader,
+    std::set<const Instruction*> invariants);
 
   // pass instances
   DominancePass dominance;

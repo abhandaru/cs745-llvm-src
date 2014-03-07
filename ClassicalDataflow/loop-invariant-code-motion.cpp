@@ -25,8 +25,7 @@ LicmPass::LicmPass() : LoopPass(ID) {
 // Helper function for printing out dominator information.
 //
 void LicmPass::showDominators(const BlockVector& blocks,
-    const BasicBlock* preheader) {
-  BlockStates states = dominance.runOnBlocks(blocks);
+    BlockStates& states, const BasicBlock* preheader) {
   for (BlockVector::const_iterator I = blocks.begin(), IE = blocks.end();
       I != IE; ++I) {
     const BasicBlock* block = *I;
@@ -46,8 +45,8 @@ void LicmPass::showDominators(const BlockVector& blocks,
 //
 // Check if instruction is invariant.
 //
-bool LicmPass::isInvariant(Loop* loop, set<const Instruction*>& invariants,
-    const Instruction* instr) {
+bool LicmPass::isInvariant(const Loop* loop,
+    set<const Instruction*>& invariants, const Instruction* instr) {
     instr->dump();
 
     // Must also satisfy these conditions to ensure safety of movement.
@@ -78,8 +77,8 @@ bool LicmPass::isInvariant(Loop* loop, set<const Instruction*>& invariants,
 // - all reaching definitions for operand are outside the loop
 // - both have exactly 1 reaching definition and it is invariant
 //
-bool LicmPass::isInvariant(Loop* loop, set<const Instruction*>& invariants,
-    const Value* operand) {
+bool LicmPass::isInvariant(const Loop* loop,
+    set<const Instruction*>& invariants, const Value* operand) {
   // invariance check for instruction operands
   if (isa<const Instruction>(operand)) {
     cerr << "   - op<instr>";
@@ -103,6 +102,59 @@ bool LicmPass::isTopLevel(const Loop* loop, const BasicBlock* block) {
 }
 
 
+void LicmPass::inspectBlock(const Loop* loop, const BasicBlock* block,
+    set<const Instruction*>& invariants) {
+  // No need to iterate over subloops because they will already have their
+  // instructions hoisted. Skip if we are in the subloop.
+  bool top_level = isTopLevel(loop, block);
+  cerr << block->getName().data() << " (" << (int)top_level << "):" << endl;
+  if (!top_level) {
+    cerr << " - skipping ..." << endl;
+    return;
+  }
+
+  // Iterate through all the intructions.
+  for (BasicBlock::const_iterator J = block->begin(), JE = block->end();
+      J != JE; ++J) {
+    const Instruction& instr = *J;
+    bool invariant = isInvariant(loop, invariants, &instr);
+    if (invariant) {
+      cerr << "   - INVARIANT" << endl;
+      invariants.insert(&instr);
+    }
+  }
+}
+
+
+//
+// For a given loop, find the loop invariant instructions and populate the
+// set of invariant instructions found.
+//
+void LicmPass::findInvariants(
+    const Loop* loop,
+    const BlockVector& blocks,
+    BlockStates& states,
+    const BasicBlock* preheader,
+    set<const Instruction*> invariants) {
+  // Compute the dominance tree.
+  DominancePass::Node dom_tree = dominance.getDominatorTree(
+      blocks, states, preheader);
+  vector<DominancePass::Node*> stack;
+  stack.push_back(&dom_tree);
+  // Do a pre-order traversal over the Dominance Tree.
+  while (!stack.empty()) {
+    DominancePass::Node* node = stack.back();
+    stack.pop_back();
+    if (node->parent) {
+      inspectBlock(loop, node->data, invariants);
+    }
+    for (int i = 0; i < node->children.size(); i++) {
+      stack.push_back(node->children[i]);
+    }
+  }
+}
+
+
 //
 // Override the runOnLoop function provided by LoopPass.
 // Return true because we intend on modifying the control flow graph.
@@ -118,55 +170,14 @@ bool LicmPass::runOnLoop(Loop *loop, LPPassManager &LPM) {
     return false;
   }
 
-  // run analysis passes on blocks
+  // Run analysis passes on blocks.
   const BlockVector& blocks = loop->getBlocks();
-  showDominators(blocks, preheader);
+  BlockStates states = dominance.runOnBlocks(blocks);
+  showDominators(blocks, states, preheader);
 
-  // compute reaching definitions for all blocks
+  // Cache all the invariants we have found so far.
   set<const Instruction*> invariants;
-  BlockStates states = reaching.runOnBlocks(blocks);
-
-  // print out dominance tree (debug)
-  // DominancePass::Node dom_tree = dominance.getDominatorTree(
-  //     blocks, states, preheader);
-  // vector<DominancePass::Node*> stack;
-  // stack.push_back(&dom_tree);
-  // while (!stack.empty()) {
-  //   DominancePass::Node* node = stack.back();
-  //   stack.pop_back();
-  //   if (node->parent) {
-  //     cerr << node->data->getName().data() << endl;
-  //   }
-  //   for (int i = 0; i < node->children.size(); i++) {
-  //     stack.push_back(node->children[i]);
-  //   }
-  // }
-
-  // go through all blocks in the loop
-  for (BlockVector::const_iterator I = blocks.begin(), IE = blocks.end();
-      I != IE; ++I) {
-    const BasicBlock* block = *I;
-    BlockState& state = states[block];
-    // no need to iterate over subloops because they will already have their
-    // instructions hoisted
-    // can do a subloop check, then skip if we are in the subloop
-    bool top_level = isTopLevel(loop, block);
-    cerr << block->getName().data() << " (" << (int)top_level << "):" << endl;
-    if (!top_level) {
-      cerr << " - skipping ..." << endl;
-      continue;
-    }
-
-    for (BasicBlock::const_iterator J = block->begin(), JE = block->end();
-        J != JE; ++J) {
-      const Instruction& instr = *J;
-      bool invariant = isInvariant(loop, invariants, &instr);
-      if (invariant) {
-        cerr << "   - INVARIANT" << endl;
-        invariants.insert(&instr);
-      }
-    }
-  }
+  findInvariants(loop, blocks, states, preheader, invariants);
 
   // assume we modified the loop
   cerr << endl;
