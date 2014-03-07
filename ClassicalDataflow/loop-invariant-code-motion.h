@@ -38,8 +38,11 @@ class LicmPass : public LoopPass {
   bool isInvariant(Loop* loop, std::set<const Instruction*>& invariants,
     const Value* operand);
   bool isTopLevel(const Loop* loop, const BasicBlock* block);
+
+  // pass instances
   DominancePass dominance;
   ReachingPass reaching;
+
   // data from LLVM passes
   LoopInfo* info;
 };

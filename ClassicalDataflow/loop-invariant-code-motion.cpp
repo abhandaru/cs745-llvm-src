@@ -43,11 +43,9 @@ void LicmPass::showDominators(const BlockVector& blocks,
 }
 
 
-// iterate through operands and check to see if they are invariant.
-// they must meet 1 of the following criteria
-// - both constant
-// - all reaching definitions for operands are outside the loop
-// - both have exactly 1 reaching definition and it is invariant
+//
+// Check if instruction is invariant.
+//
 bool LicmPass::isInvariant(Loop* loop, set<const Instruction*>& invariants,
     const Instruction* instr) {
     instr->dump();
@@ -59,6 +57,7 @@ bool LicmPass::isInvariant(Loop* loop, set<const Instruction*>& invariants,
       return false;
     }
 
+    // See if all operands are invariant.
     for (User::const_op_iterator OI = instr->op_begin(), OE = instr->op_end();
         OI != OE; ++OI) {
       const Value *val = *OI;
@@ -72,6 +71,13 @@ bool LicmPass::isInvariant(Loop* loop, set<const Instruction*>& invariants,
 }
 
 
+//
+// iterate through operands and check to see if they are invariant.
+// An invariant is any non-instruction or must meet 1 of the following.
+// - constant (TODO: try and constant fold here)
+// - all reaching definitions for operand are outside the loop
+// - both have exactly 1 reaching definition and it is invariant
+//
 bool LicmPass::isInvariant(Loop* loop, set<const Instruction*>& invariants,
     const Value* operand) {
   // invariance check for instruction operands
@@ -119,6 +125,22 @@ bool LicmPass::runOnLoop(Loop *loop, LPPassManager &LPM) {
   // compute reaching definitions for all blocks
   set<const Instruction*> invariants;
   BlockStates states = reaching.runOnBlocks(blocks);
+
+  // print out dominance tree (debug)
+  // DominancePass::Node dom_tree = dominance.getDominatorTree(
+  //     blocks, states, preheader);
+  // vector<DominancePass::Node*> stack;
+  // stack.push_back(&dom_tree);
+  // while (!stack.empty()) {
+  //   DominancePass::Node* node = stack.back();
+  //   stack.pop_back();
+  //   if (node->parent) {
+  //     cerr << node->data->getName().data() << endl;
+  //   }
+  //   for (int i = 0; i < node->children.size(); i++) {
+  //     stack.push_back(node->children[i]);
+  //   }
+  // }
 
   // go through all blocks in the loop
   for (BlockVector::const_iterator I = blocks.begin(), IE = blocks.end();

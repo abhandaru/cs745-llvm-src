@@ -7,7 +7,9 @@
 
 #include <set>
 #include <queue>
+#include <vector>
 
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/IR/Function.h"
 #include "llvm/Pass.h"
 
@@ -16,9 +18,25 @@
 
 namespace llvm {
 
-
 class DominancePass : public DataFlowPass {
  public:
+  // datatypes
+  class Node;
+  class Node {
+   public:
+    Node(const Node* _parent, const BasicBlock* _data)
+        : data(_data), parent(_parent) { };
+    ~Node() {
+      for (int i = 0; i < children.size(); i++) {
+        delete children[i];
+      }
+    };
+    const BasicBlock* data;
+    const Node* parent;
+    std::vector<Node *> children;
+  };
+
+  // methods
   static char ID;
   DominancePass();
   Assignments top(const BasicBlock& block);
@@ -29,6 +47,8 @@ class DominancePass : public DataFlowPass {
     const Assignments& input, Assignments& output);
 
   // deriving tree
+  DominancePass::Node getDominatorTree(const BlockVector& blocks,
+    BlockStates& states, const BasicBlock* preheader);
   const BasicBlock* getIdom(BlockStates& states, const BasicBlock* node);
 };
 
