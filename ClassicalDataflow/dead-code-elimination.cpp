@@ -64,54 +64,59 @@ void DcePass::transferFn(const Assignments& generate,
 
 
 //
+// String of checks for a dead assignment.
+//
+bool DcePass::isDead(Instruction* instr) {
+  if (!instr->use_empty())
+    return false;
+  if (isa<TerminatorInst>(instr))
+    return false;
+  if (isa<DbgInfoIntrinsic>(instr))
+    return false;
+  if (isa<LandingPadInst>(instr))
+    return false;
+  if (instr->mayHaveSideEffects())
+    return false;
+  return true;
+}
+
+
+//
 // Methods for smaller granularities.
 //
-// Assignments DcePass::forInstruction(const BlockState& state,
-//     const Instruction& instr) {
-//   instr.dump();
-// }
 bool DcePass::runOnFunction(Function& fn) {
-  cout << "Function: " << fn.getName().data() << endl << endl;
+  cerr << "Function: " << fn.getName().data() << endl;
   BlockList& blocks = fn.getBasicBlockList();
   BlockStates states = runOnBlocks(blocks);
-  std::set<Instruction*> toRemove;
+  set<Instruction*> dead;
+  bool changed = false;
 
+  cerr << "- Instructions to remove:" << endl;
   for (BlockList::iterator I = blocks.begin(), IE = blocks.end();
       I != IE; ++I) {
     BasicBlock* block = &(*I);
-    BlockState& state = states[block];
-
-    for(BasicBlock::iterator itrB = (*block).begin(); itrB != (*block).end(); ++itrB) {
-      Instruction* instr = &(*itrB);
-      Value* val = instr;
-      if(isa<TerminatorInst>(val) || isa<DbgInfoIntrinsic>(val) 
-          || isa<LandingPadInst>(val) || instr->mayHaveSideEffects()) {
-        for(BasicBlock::iterator itrTmp = itrB; itrTmp != (*block).end(); ++itrTmp) {
-          Instruction* inst = itrTmp;
-          if (inst != instr) {
-            toRemove.insert(inst);
-            break;
-          }
-        }
+    dead.clear();
+    // Iterate through instructions and inspect.
+    for(BasicBlock::iterator J = block->begin(), JE = block->end();
+        J != JE; ++J) {
+      Instruction* instr = &(*J);
+      if (isDead(instr)) {
+        dead.insert(instr);
       }
-      else {
-        toRemove.insert(instr);
-      }
-      // if (isInstructionTriviallyDead(instr))
-      //   toRemove.insert(instr);
     }
-
-    for(set<Instruction*>::iterator I = toRemove.begin(), IE = toRemove.end();
+    // Remove all marked instructions.
+    for(set<Instruction*>::iterator I = dead.begin(), IE = dead.end();
         I != IE; ++I) {
       Instruction* instr = *I;
-      // instr->removeAllReferences();
-      // if()
-        instr->eraseFromParent();
+      instr->dump();
+      instr->eraseFromParent();
+      changed = true;
     }
-
   }
-  display(blocks, states);
-  return false;
+
+  // Return whether or not we removed any instructions.
+  cerr << endl;
+  return changed;
 }
 
 //

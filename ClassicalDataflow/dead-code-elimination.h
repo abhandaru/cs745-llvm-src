@@ -33,6 +33,9 @@ class DcePass : public DataFlowPass {
   void transferFn(const Assignments& generate, const Assignments& kill,
     const Assignments& input, Assignments& output);
   bool runOnFunction(Function& fn);
+
+ private:
+  bool isDead(Instruction* instr);
 };
 
 }
